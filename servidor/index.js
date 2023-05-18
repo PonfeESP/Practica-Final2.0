@@ -8,17 +8,15 @@ import axios from 'axios';
 
 
 import { strategyInit } from './lib/AuthStrategy.js';
-
-import User from './models/User.model.js';
-import Movie from './models/Movie.model.js';
-import Cinema from './models/Cinema.model.js';
 import { development } from './knexfile.js';
+
 import ShowTiming from './models/ShowTiming.model.js';
 import Timeslot from './models/Timeslot.model.js';
 import Sales from './models/Sales.model.js';
 import EmpresaPromotora from './models/Empresa.model.js';
 import Cliente from './models/Cliente.model.js';
 import Admin from './models/Admin.model.js';
+import Evento from './models/Evento.model.js';
 
 // Instanciamos Express y el middleware de JSON y CORS
 const app = express();
@@ -44,6 +42,7 @@ const dbConnection = Knex(development);
 EmpresaPromotora.knex(dbConnection);
 Cliente.knex(dbConnection);
 Admin.knex(dbConnection);
+Evento.knex(dbConnection);
 
 // Endpoint: POST /movies --> Devuelve todas las películas
 app.post('/movies', (req, res) => {
@@ -139,7 +138,6 @@ app.post('/cinemas', (req, res) => {
     }
   } else Cinema.query().then(results => res.status(200).json(results));
 });
-
 
 app.post("/loginAdmin", passport.authenticate('local-administrador'), (req, res) => {
   if (!!req.user) {
@@ -254,6 +252,65 @@ app.post("/registrocliente", (req, res) => {
       })
     }
   })
+});
+
+app.post("/registroeventos", (req, res) => {
+  const dbQuery = Evento.query();
+  dbQuery.findOne({ nombre: req.body.nombre }).then(async result => {
+    if (!!result) {
+      res.status(500).json({ error: "El evento ya está registrado" });
+    } else {
+      const fechaEvento = req.body.fecha;
+      const isValidDate = moment(fechaEvento, 'YYYY-MM-DD', true).isValid();
+      if (!isValidDate) {
+        res.status(400).json({ error: "Fecha de evento inválida" });
+        return;
+      }
+      dbQuery.insert({
+        nombre: req.body.nombre,
+        artista: req.body.artista,
+        ubicacion: req.body.ubicacion,
+        aforo: req.body.aforo,
+        descripcion: req.body.descripcion,
+        fecha: req.body.fecha,
+        precio: req.body.precio
+      }).then(insertResult => {
+        if (!!insertResult) {
+          res.status(200).json({ status: "OK" });
+        } else {
+          res.status(500).json({ status: "Error al registrar el evento" });
+        }
+      }).catch(error => {
+        res.status(500).json({ status: "Error al registrar el evento" });
+      });
+    }
+  });
+});
+
+app.post('/mostrarevento', (req, res) => {
+  const consulta = Evento.query().throwIfNotFound();
+
+  if (!!req.body && req.body !== {}) {
+    // Filtrado por ID
+    if (!!req.body.id) consulta.findById(req.body.id);
+
+    // Filtrado por fecha
+    if (!!req.body.fecha) consulta.where('fecha', '=', req.body.fecha);
+
+    // Filtrado por artista
+    if (!!req.body.artista) consulta.where('artista', '=', req.body.artista);
+  } else Cinema.query().then(results => res.status(200).json(results));
+
+  // Ordenar por ID, fecha o artista
+  if (req.body.order === 'id') {
+    consulta.orderBy('id');
+  } else if (req.body.order === 'fecha') {
+    consulta.orderBy('fecha');
+  } else if (req.body.order === 'artista') {
+    consulta.orderBy('artista');
+  }
+
+  consulta.then(results => res.status(200).json(results)).catch(err => res.status(500).json({ error: 'Error al obtener los eventos' }));
 });
 
 
