@@ -8,7 +8,7 @@ export default class Cliente extends Model {
 
   static jsonSchema = {
     type: 'object',
-    required: ['email', 'nombre', 'apellidos', 'email', 'dni', 'telefono', 'fechanacimiento'],
+    required: ['email', 'nombre', 'apellidos', 'dni', 'telefono', 'fechanacimiento'],
 
     properties: {
       id: { type: 'integer' },
@@ -18,7 +18,7 @@ export default class Cliente extends Model {
       password: { type: 'string' },
       dni: { type: 'string' },
       telefono: { type: 'string' },
-      fechanacimiento: { type: 'string' },
+      fechanacimiento: { type: 'string', format: 'date' },
     }
   };
 
