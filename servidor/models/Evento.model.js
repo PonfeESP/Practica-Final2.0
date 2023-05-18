@@ -19,6 +19,7 @@ export default class Evento extends Model {
       descripcion: { type: 'string' },
       fecha: { type: 'string' },
       precio: { type: 'number' },
+      empresa_promotora_id: { type: 'integer' },
     },
   };
 }

@@ -273,7 +273,8 @@ app.post("/registroeventos", (req, res) => {
         aforo: req.body.aforo,
         descripcion: req.body.descripcion,
         fecha: req.body.fecha,
-        precio: req.body.precio
+        precio: req.body.precio,
+        empresa_promotora_id: req.body.empresa_promotora_id
       }).then(insertResult => {
         if (!!insertResult) {
           res.status(200).json({ status: "OK" });
