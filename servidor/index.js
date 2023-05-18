@@ -179,6 +179,7 @@ app.post("/registroempresa", (req, res) => {
     dbQuery.findOne({email: req.body.email}).then(async result => {
       if (!!result) res.status(500).json({ error: "El cliente ya está registrado" });
       else {
+        const fechanacimientodate = new Date(req.body.fechanacimiento);
         dbQuery.insert({
           email: req.body.email,
           unsecurePassword: String(req.body.password),
@@ -186,7 +187,7 @@ app.post("/registroempresa", (req, res) => {
           apellidos: req.body.apellidos,
           dni: req.body.dni,
           telefono: req.body.telefono,
-          fechanacimiento: req.body.fechanacimiento,
+          fechanacimiento: fechanacimientodate,
           }).then(insertResult => {
             if (!!insertResult) res.status(200).json({ status: "OK" });
             else res.status(500).json({ status: "Error al registrar el cliente" });
