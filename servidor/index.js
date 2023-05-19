@@ -266,24 +266,40 @@ app.post("/registroeventos", (req, res) => {
         res.status(400).json({ error: "Fecha de evento inválida" });
         return;
       }
-      dbQuery.insert({
-        nombre: req.body.nombre,
-        artista: req.body.artista,
-        ubicacion: req.body.ubicacion,
-        aforo: req.body.aforo,
-        descripcion: req.body.descripcion,
-        fecha: req.body.fecha,
-        precio: req.body.precio,
-        empresa_promotora_id: req.body.empresa_promotora_id
-      }).then(insertResult => {
-        if (!!insertResult) {
-          res.status(200).json({ status: "OK" });
-        } else {
-          res.status(500).json({ status: "Error al registrar el evento" });
-        }
-      }).catch(error => {
-        res.status(500).json({ status: "Error al registrar el evento" });
-      });
+
+      EmpresaPromotora.query()
+        .findById(req.body.empresa_promotora_id)
+        .then(async empresa => {
+          if (!empresa) {
+            res.status(400).json({ error: "La empresa promotora no existe" });
+            return;
+          }
+
+          dbQuery
+            .insert({
+              nombre: req.body.nombre,
+              artista: req.body.artista,
+              ubicacion: req.body.ubicacion,
+              aforo: req.body.aforo,
+              descripcion: req.body.descripcion,
+              fecha: req.body.fecha,
+              precio_entrada: req.body.precio_entrada,
+              empresa_promotora_id: req.body.empresa_promotora_id
+            })
+            .then(insertResult => {
+              if (!!insertResult) {
+                res.status(200).json({ status: "OK" });
+              } else {
+                res.status(500).json({ status: "Error al registrar el evento" });
+              }
+            })
+            .catch(error => {
+              res.status(500).json({ status: "Error al registrar el evento" });
+            });
+        })
+        .catch(error => {
+          res.status(500).json({ status: "Error al buscar la empresa promotora" });
+        });
     }
   });
 });
@@ -292,15 +308,19 @@ app.post('/mostrarevento', (req, res) => {
   const consulta = Evento.query().throwIfNotFound();
 
   if (!!req.body && req.body !== {}) {
-    // Filtrado por ID
+    // Filtrado id para clientes
     if (!!req.body.id) consulta.findById(req.body.id);
 
-    // Filtrado por fecha
+    // Filtrado fecha para clientes
     if (!!req.body.fecha) consulta.where('fecha', '=', req.body.fecha);
 
-    // Filtrado por artista
+    // Filtrado artista para clientes
     if (!!req.body.artista) consulta.where('artista', '=', req.body.artista);
-  } else Cinema.query().then(results => res.status(200).json(results));
+
+    // Filtrado para empresas
+    if (!!req.body.empresa_promotora_id) consulta.where('empresa_promotora_id', '=', req.body.empresa_promotora_id);
+  
+  } else Evento.query().then(results => res.status(200).json(results));
 
   // Ordenar por ID, fecha o artista
   if (req.body.order === 'id') {
@@ -312,6 +332,78 @@ app.post('/mostrarevento', (req, res) => {
   }
 
   consulta.then(results => res.status(200).json(results)).catch(err => res.status(500).json({ error: 'Error al obtener los eventos' }));
+});
+
+app.delete("/eliminarevento", (req, res) => {
+  const dbQuery = Evento.query();
+  const eventoId = req.body.id;
+
+  dbQuery
+    .findById(eventoId)
+    .then(evento => {
+      if (!evento) {
+        res.status(404).json({ error: "El evento no existe" });
+      } else {
+        const fechaEvento = new Date(evento.fecha);
+        const fechaActual = new Date();
+        const valido = (fechaEvento - fechaActual) / (1000 * 60 * 60);
+
+        if (valido > 24) {
+          dbQuery
+            .deleteById(eventoId)
+            .then(contador => {
+              if (contador > 0) {
+                res.status(200).json({ status: "OK" });
+              } else {
+                res.status(500).json({ error: "Error al eliminar el evento" });
+              }
+            })
+            .catch(error => {
+              res.status(500).json({ error: "Error al eliminar el evento" });
+            });
+        } else {
+          res.status(400).json({ error: "Quedan menos de 24H hasta el evento, no puede ser eliminado" });
+        }
+      }
+    })
+    .catch(error => {
+      res.status(500).json({ error: "Error al buscar el evento" });
+    });
+});
+
+app.put("/modificarevento", (req, res) => {
+  const dbQuery = Evento.query();
+  const eventoId = req.body.id;
+  const descripcionmod = req.body.descripcion;
+
+  dbQuery
+    .findById(eventoId)
+    .then(evento => {
+      if (!evento) {
+        res.status(404).json({ error: "El evento no existe" });
+      } else {
+        const fechaEvento = new Date(evento.fecha);
+        const fechaActual = new Date();
+        const valido = (fechaEvento - fechaActual) / (1000 * 60 * 60);
+
+        if (valido > 24) {
+          evento
+            .$query()
+            .patch({ descripcion: descripcionmod })
+            .then(() => {
+              res.status(200).json({ status: "OK" });
+            })
+            .catch(error => {
+              res.status(500).json({ error: "Error al modificar la información del evento" });
+            });
+        } else {
+          res.status(400).json({ error: "Quedan menos de 24 horas hasta el evento, no se puede modificar" });
+        }
+      }
+    })
+    .catch(error => {
+      res.status(500).json({ error: "Error al buscar el evento" });
+    });
 });
 
 
