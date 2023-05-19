@@ -19,6 +19,7 @@ export default class Evento extends Model {
       aforo: { type: 'integer' },
       descripcion: { type: 'string' },
       fecha: { type: 'string' },
+      hora: { type: 'string' },
       precio_entrada: { type: 'number' },
       empresa_promotora_id: { type: 'integer' },
     },

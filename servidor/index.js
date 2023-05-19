@@ -223,21 +223,27 @@ app.post("/registroempresa", (req, res) => {
 app.post("/registrocliente", (req, res) => {
   const dbQuery = Cliente.query();
   dbQuery.findOne({ email: req.body.email }).then(async result => {
-    if (!!result) res.status(500).json({ error: "El cliente ya está registrado" });
-    else {
-      const fechaNacimiento = req.body.fechanacimiento;
-      const isValidDate = moment(fechaNacimiento, 'YYYY-MM-DD', true).isValid();
-      if (!isValidDate) {
-        res.status(400).json({ error: "Fecha de nacimiento inválida" });
-        return;
-      }
-      const edadMinima = 18;
-      const fechaActual = moment();
-      const edad = fechaActual.diff(fechaNacimiento, 'years');    
-      if (edad < edadMinima) {
-        res.status(400).json({ error: "Debes ser mayor de 18 años para registrarte" });
-      }
-      dbQuery.insert({
+    if (!!result) {
+      res.status(500).json({ error: "El cliente ya está registrado" });
+    }
+
+    const fechaNacimiento = req.body.fechanacimiento;
+    const isValidDate = moment(fechaNacimiento, 'YYYY-MM-DD', true).isValid();
+
+    if (!isValidDate) {
+      res.status(400).json({ error: "Fecha de nacimiento inválida" });
+    }
+
+    const edadMinima = 18;
+    const fechaActual = moment();
+    const edad = fechaActual.diff(fechaNacimiento, 'years');
+
+    if (edad < edadMinima) {
+      res.status(400).json({ error: "Debes ser mayor de 18 años para registrarte" });
+    }
+
+    dbQuery
+      .insert({
         email: req.body.email,
         unsecurePassword: String(req.body.password),
         nombre: req.body.nombre,
@@ -245,62 +251,82 @@ app.post("/registrocliente", (req, res) => {
         dni: req.body.dni,
         telefono: req.body.telefono,
         fechanacimiento: req.body.fechanacimiento,
-      }).then(insertResult => {
-        if (!!insertResult) res.status(200).json({ status: "OK" });
-        else res.status(500).json({ status: "Error al registrar el cliente" });
-      }).catch(error => {
-        res.status(500).json({ status: "Error al registrar el clientes" });
       })
-    }
-  })
+      .then(insertResult => {
+        if (!!insertResult) {
+          res.status(200).json({ status: "OK" });
+        } else {
+          res.status(500).json({ status: "Error al registrar el cliente" });
+        }
+      })
+      .catch(error => {
+        res.status(500).json({ status: "Error al registrar el cliente" });
+      });
+  });
 });
+
 
 app.post("/registroeventos", (req, res) => {
   const dbQuery = Evento.query();
   dbQuery.findOne({ nombre: req.body.nombre }).then(async result => {
     if (!!result) {
-      res.status(500).json({ error: "El evento ya está registrado" });
-    } else {
-      const fechaEvento = req.body.fecha;
-      const isValidDate = moment(fechaEvento, 'YYYY-MM-DD', true).isValid();
-      if (!isValidDate) {
-        res.status(400).json({ error: "Fecha de evento inválida" });
-        return;
-      }
-
-      EmpresaPromotora.query()
-        .findById(req.body.empresa_promotora_id)
-        .then(async empresa => {
-          if (!empresa) res.status(400).json({ error: "La empresa promotora no existe" });
-
-          dbQuery
-            .insert({
-              nombre: req.body.nombre,
-              artista: req.body.artista,
-              ubicacion: req.body.ubicacion,
-              aforo: req.body.aforo,
-              descripcion: req.body.descripcion,
-              fecha: req.body.fecha,
-              precio_entrada: req.body.precio_entrada,
-              empresa_promotora_id: req.body.empresa_promotora_id
-            })
-            .then(insertResult => {
-              if (!!insertResult) {
-                res.status(200).json({ status: "OK" });
-              } else {
-                res.status(500).json({ status: "Error al registrar el evento" });
-              }
-            })
-            .catch(error => {
-              res.status(500).json({ status: "Error al registrar el evento" });
-            });
-        })
-        .catch(error => {
-          res.status(500).json({ status: "Error al buscar la empresa promotora" });
-        });
+      return res.status(500).json({ error: "El evento ya está registrado" });
     }
+
+    const fechaEvento = moment(req.body.fecha, 'YYYY-MM-DD', true);
+    const horaEvento = moment(req.body.hora, 'HH:mm', true);
+
+    if (!fechaEvento.isValid() || !horaEvento.isValid()) {
+      return res.status(400).json({ error: "Fecha u hora de evento inválida" });
+    }
+
+    const fechaActual = moment();
+    const horaActual = moment();
+    const tiempoEvento = moment(fechaEvento).set({ 'hour': horaEvento.hours(), 'minute': horaEvento.minutes() });
+    const tiempoActual = moment(fechaActual).set({ 'hour': horaActual.hours(), 'minute': horaActual.minutes() });
+    const valido = (tiempoEvento - tiempoActual) / (1000 * 60 * 60);
+
+    if (valido < 24) {
+      return res.status(400).json({ error: "Quedan menos de 24 horas hasta el evento, no se puede registrar" });
+    }
+
+    EmpresaPromotora.query()
+      .findById(req.body.empresa_promotora_id)
+      .then(async empresa => {
+        if (!empresa) {
+          return res.status(400).json({ error: "La empresa promotora no existe" });
+        }
+
+        dbQuery
+          .insert({
+            nombre: req.body.nombre,
+            artista: req.body.artista,
+            ubicacion: req.body.ubicacion,
+            aforo: req.body.aforo,
+            descripcion: req.body.descripcion,
+            fecha: req.body.fecha,
+            hora: req.body.hora,
+            precio_entrada: req.body.precio_entrada,
+            empresa_promotora_id: req.body.empresa_promotora_id
+          })
+          .then(insertResult => {
+            if (!!insertResult) {
+              res.status(200).json({ status: "OK" });
+            } else {
+              res.status(500).json({ status: "Error al registrar el evento" });
+            }
+          })
+          .catch(error => {
+            res.status(500).json({ status: "Error al registrar el evento" });
+          });
+      })
+      .catch(error => {
+        res.status(500).json({ status: "Error al buscar la empresa promotora" });
+      });
   });
 });
+
+
 
 app.post("/verificarempresa", async (req, res) => {
   try {
@@ -317,11 +343,13 @@ app.post("/verificarempresa", async (req, res) => {
 });
 
 app.post('/mostrarempresas', (req, res) => {
-  const consulta = EmpresaPromotora.query().throwIfNotFound();
+  const consulta = EmpresaPromotora.query();
 
   if (!!req.body && req.body !== {}) {
     // Filtrado por verificadas para admin
-    if (!!req.body.verificadas) consulta.where('verificada', '=', !!req.body.verificadas);
+    if (req.body.verificada !== undefined) {
+      consulta.where('verificada', req.body.verificada);
+    }
   }
 
   consulta
@@ -330,8 +358,11 @@ app.post('/mostrarempresas', (req, res) => {
 });
 
 
+
 app.post('/mostrarevento', (req, res) => {
   const consulta = Evento.query().throwIfNotFound();
+
+  //esto me lo hace el front lo de ordenar
 
   if (!!req.body && req.body !== {}) {
     // Filtrado id para clientes
@@ -429,9 +460,13 @@ app.delete("/eliminarevento", (req, res) => {
       if (!evento) {
         res.status(404).json({ error: "El evento no existe" });
       } else {
-        const fechaEvento = new Date(evento.fecha);
-        const fechaActual = new Date();
-        const valido = (fechaEvento - fechaActual) / (1000 * 60 * 60);
+        const fechaEvento = moment(evento.fecha, 'YYYY-MM-DD');
+        const horaEvento = moment(evento.hora, 'HH:mm');
+        const fechaActual = moment();
+        const horaActual = moment();
+        const tiempoEvento = moment(fechaEvento).set({ 'hour': horaEvento.hours(), 'minute': horaEvento.minutes() });
+        const tiempoActual = moment(fechaActual).set({ 'hour': horaActual.hours(), 'minute': horaActual.minutes() });
+        const valido = (tiempoEvento - tiempoActual) / (1000 * 60 * 60);
 
         if (valido > 24) {
           dbQuery
@@ -459,7 +494,14 @@ app.delete("/eliminarevento", (req, res) => {
 app.put("/modificarevento", (req, res) => {
   const dbQuery = Evento.query();
   const eventoId = req.body.id;
+  const nombremod = req.body.nombre;
+  const artistamod = req.body.artista;
+  const ubicacionmod = req.body.ubicacion;
   const descripcionmod = req.body.descripcion;
+  const aforomod = req.body.aforo;
+  const fechamod = req.body.fecha;
+  const horamod = req.body.hora;
+  const preciomod = req.body.precio_entrada;
 
   dbQuery
     .findById(eventoId)
@@ -467,14 +509,27 @@ app.put("/modificarevento", (req, res) => {
       if (!evento) {
         res.status(404).json({ error: "El evento no existe" });
       } else {
-        const fechaEvento = new Date(evento.fecha);
-        const fechaActual = new Date();
-        const valido = (fechaEvento - fechaActual) / (1000 * 60 * 60);
+        const fechaEvento = moment(fechamod, 'YYYY-MM-DD');
+        const horaEvento = moment(horamod, 'HH:mm');
+        const fechaActual = moment();
+        const horaActual = moment();
+        const tiempoEvento = moment(fechaEvento).set({ 'hour': horaEvento.hours(), 'minute': horaEvento.minutes() });
+        const tiempoActual = moment(fechaActual).set({ 'hour': horaActual.hours(), 'minute': horaActual.minutes() });
+        const valido = (tiempoEvento - tiempoActual) / (1000 * 60 * 60);
 
         if (valido > 24) {
           evento
             .$query()
-            .patch({ descripcion: descripcionmod })
+            .patch({ 
+              nombre: nombremod,
+              artista: artistamod,
+              ubicacion: ubicacionmod ,
+              aforo: aforomod, 
+              descripcion: descripcionmod, 
+              fecha: fechamod, 
+              hora: horamod, 
+              precio_entrada: preciomod,
+            })
             .then(() => {
               res.status(200).json({ status: "OK" });
             })
