@@ -212,6 +212,7 @@ app.post("/registroempresa", (req, res) => {
         telefono: req.body.telefono,
         persona_responsable: req.body.persona_responsable,
         capital_social: req.body.capital_social,
+        verificada: false
       }).then(insertResult => {
         if (!!insertResult) {
           res.status(200).json({ status: "OK" });
@@ -234,6 +235,13 @@ app.post("/registrocliente", (req, res) => {
       const isValidDate = moment(fechaNacimiento, 'YYYY-MM-DD', true).isValid();
       if (!isValidDate) {
         res.status(400).json({ error: "Fecha de nacimiento inválida" });
+        return;
+      }
+      const edadMinima = 18;
+      const fechaActual = moment();
+      const edad = fechaActual.diff(fechaNacimiento, 'years');    
+      if (edad < edadMinima) {
+        res.status(400).json({ error: "Debes ser mayor de 18 años para registrarte" });
         return;
       }
       dbQuery.insert({
@@ -304,6 +312,37 @@ app.post("/registroeventos", (req, res) => {
   });
 });
 
+app.post("/verificarempresa", async (req, res) => {
+  try {
+    const empresa = await EmpresaPromotora.query().findOne({ id: req.body.id });
+    if (!empresa) {
+      res.status(404).json({ error: "La empresa no existe" });
+    } else {
+      await EmpresaPromotora.query().patch({ verificada: true }).where({ id: req.body.id });
+      res.status(200).json({ status: "OK" });
+    }
+  } catch (error) {
+    res.status(500).json({ status: "Error al verificar la empresa" });
+  }
+});
+
+app.post('/mostrarempresas', (req, res) => {
+  const consulta = EmpresaPromotora.query().throwIfNotFound();
+
+  if (!!req.body && req.body !== {}) {
+    // Filtrado por verificadas para admin
+    if (req.body.verificada !== undefined) {
+      const verificadas = req.body.verificada === 'true'; 
+      consulta.where('verificada', '=', verificadas);
+    }
+  }
+
+  consulta
+    .then(results => res.status(200).json(results))
+    .catch(err => res.status(500).json({ error: 'Error al obtener las empresas' }));
+});
+
+
 app.post('/mostrarevento', (req, res) => {
   const consulta = Evento.query().throwIfNotFound();
 
@@ -333,6 +372,65 @@ app.post('/mostrarevento', (req, res) => {
 
   consulta.then(results => res.status(200).json(results)).catch(err => res.status(500).json({ error: 'Error al obtener los eventos' }));
 });
+
+app.delete("/eliminarcliente", (req, res) => {
+  const dbQuery = Cliente.query();
+  const clienteId = req.body.id;
+
+  dbQuery
+    .findById(clienteId)
+    .then(cliente => {
+      if (!cliente) {
+        res.status(404).json({ error: "El cliente no existe" });
+      } else {
+        dbQuery
+          .deleteById(clienteId)
+          .then(contador => {
+            if (contador > 0) {
+              res.status(200).json({ status: "OK" });
+            } else {
+              res.status(500).json({ error: "Error al eliminar el cliente" });
+            }
+          })
+          .catch(error => {
+            res.status(500).json({ error: "Error al eliminar el cliente" });
+          });
+      }
+    })
+    .catch(error => {
+      res.status(500).json({ error: "Error al buscar el cliente" });
+    });
+});
+
+app.delete("/eliminarempresa", (req, res) => {
+  const dbQuery = EmpresaPromotora.query();
+  const empresaId = req.body.id;
+
+  dbQuery
+    .findById(empresaId)
+    .then(empresa => {
+      if (!empresa) {
+        res.status(404).json({ error: "La empresa no existe" });
+      } else {
+        dbQuery
+          .deleteById(empresaId)
+          .then(contador => {
+            if (contador > 0) {
+              res.status(200).json({ status: "OK" });
+            } else {
+              res.status(500).json({ error: "Error al eliminar la empresa" });
+            }
+          })
+          .catch(error => {
+            res.status(500).json({ error: "Error al eliminar la empresa" });
+          });
+      }
+    })
+    .catch(error => {
+      res.status(500).json({ error: "Error al buscar la empresa" });
+    });
+});
+
 
 app.delete("/eliminarevento", (req, res) => {
   const dbQuery = Evento.query();

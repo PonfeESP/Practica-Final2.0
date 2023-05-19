@@ -20,6 +20,7 @@ export default class EmpresaPromotora extends Model {
       telefono: { type: 'string' },
       persona_responsable: { type: 'string' },
       capital_social: { type: 'string' },
+      verificada: { type: 'boolean' }
     }
   };
 
