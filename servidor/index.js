@@ -160,19 +160,13 @@ app.post("/loginCliente", passport.authenticate('local-cliente'), (req, res) => 
   else res.status(500).json({ status: "Sesión no iniciada" });
 });
 
-app.post("/logoutAdmin", (req, res) => {
-  req.logout(() => {});
-  res.status(200).json({ status: "OK" });
-});
-
-app.post("/logoutEmpresa", (req, res) => {
-  req.logout(() => {});
-  res.status(200).json({ status: "OK" });
-});
-
-app.post("/logoutCliente", (req, res) => {
-  req.logout(() => {});
-  res.status(200).json({ status: "OK" });
+app.post("/logout", (req, res) => {
+  req.logout(err => {
+    if (!!err) res.status(500).json({error: err});
+    delete req.user; // <-- Elimina el req.user
+    req.session.destroy(); // <-- Destruye la sesión
+    res.status(200).clearCookie('SessionCookie.SID', {path: "/"}).json({status: "Ok"}); // <-- Borrar la cookie
+  })
 });
 
 app.post("/registroadmin", (req, res) => {
@@ -242,7 +236,6 @@ app.post("/registrocliente", (req, res) => {
       const edad = fechaActual.diff(fechaNacimiento, 'years');    
       if (edad < edadMinima) {
         res.status(400).json({ error: "Debes ser mayor de 18 años para registrarte" });
-        return;
       }
       dbQuery.insert({
         email: req.body.email,
@@ -278,10 +271,7 @@ app.post("/registroeventos", (req, res) => {
       EmpresaPromotora.query()
         .findById(req.body.empresa_promotora_id)
         .then(async empresa => {
-          if (!empresa) {
-            res.status(400).json({ error: "La empresa promotora no existe" });
-            return;
-          }
+          if (!empresa) res.status(400).json({ error: "La empresa promotora no existe" });
 
           dbQuery
             .insert({
@@ -331,10 +321,7 @@ app.post('/mostrarempresas', (req, res) => {
 
   if (!!req.body && req.body !== {}) {
     // Filtrado por verificadas para admin
-    if (req.body.verificada !== undefined) {
-      const verificadas = req.body.verificada === 'true'; 
-      consulta.where('verificada', '=', verificadas);
-    }
+    if (!!req.body.verificadas) consulta.where('verificada', '=', !!req.body.verificadas);
   }
 
   consulta
