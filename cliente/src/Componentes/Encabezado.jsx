@@ -8,6 +8,7 @@ import axios from 'axios';
 import {AppBar, Box, Toolbar, IconButton, Typography, Menu, Container, Avatar, Button, Tooltip, MenuItem} from '@mui/material';
 import AdbIcon from '@mui/icons-material/Adb';
 import MenuIcon from '@mui/icons-material/Menu';
+import { useNavigate } from 'react-router-dom';
 
 export const Encabezado = () => {
     // Control del Navegador (Tamaños)
@@ -16,18 +17,27 @@ export const Encabezado = () => {
     
     // Control de Usuario
     const [userData, setUserData] = useState();
+    const [logoutError, setLogoutError] = useState();
+    const [borrarCuentaError, setBorrarCuentaError] = useState();
+    setLogoutError('');
+    setBorrarCuentaError('');
+
+    // Control de Redirecciones
+    const navigate = useNavigate();
   
-    useEffect(() => { // Obtener User
+  useEffect(() => { // Obtener User
       axios({
           url: 'http://localhost:8080/user',
           method: 'GET',
           withCredentials: true,
       })
       .then(res => {
-        setUserData(res.data)//QUÉ RECIBE??
+        setUserData(res.data);
       })
       .catch(err => console.log(err))
   }, []);
+
+  
 
   // Nombres de página
   const pags = !!userData ? [{
@@ -39,17 +49,84 @@ export const Encabezado = () => {
   }, {
     title: 'Cliente',
     path: '/client'
+  }, {
+    title: 'Inicio',
+    path: '/'
   }] : [{
     title: 'Iniciar sesión',
   }, {
     title: 'Registrarse'
   }]
 
-  const ajustes = !!userData ? (['Cerrar sesión']) : [];
+  const performLogout = (event) => {
+    event.preventDefault();
+    setLogoutError('');
 
-  if(!!userData){
+    if(!!userData){
+        axios({
+            url: 'http://localhost:8000/logout',
+            method: 'POST'
+        }).then((response) =>{
+            if(response.data.status === 'Ok')
+                navigate('/'); // Navega a la página de Inicio
+            else
+                setLogoutError(response.data.error);
+        })
+        .catch((error) => {
+            console.log('Error en el cierre de sesión');
+            setLogoutError('Error en el Cierre de Sesión. Inténtelo más tarde.');
+        })
+    }
+  };
 
-  }
+  const performDelete = (event) => {
+    event.preventDefault();
+    setBorrarCuentaError('');
+
+    if(!!userData){
+        if(userData.userType === 'cliente'){
+            axios({
+                url: 'http://localhost:8000/eliminarcliente',
+                method: 'DELETE',
+                data:{
+                    email: userData.userType
+                }
+            }).then((response) =>{
+                if(response.data.status === 'OK')
+                    navigate('/'); // Navega a la página de Inicio
+                else
+                    setBorrarCuentaError(response.data.error);
+            })
+            .catch((error) => {
+                console.log('Error en el cierre de sesión');
+                setBorrarCuentaError('Error en el Cierre de Sesión. Inténtelo más tarde.');
+            })
+        }
+        if(userData.userType === 'empresa'){
+            axios({
+                url: 'http://localhost:8000/eliminarempresa',
+                method: 'DELETE',
+                data:{
+                    email: userData.userType
+                }
+            }).then((response) =>{
+                if(response.data.status === 'OK')
+                    navigate('/'); // Navega a la página de Inicio
+                else
+                    setBorrarCuentaError(response.data.error);
+            })
+            .catch((error) => {
+                console.log('Error en el cierre de sesión');
+                setBorrarCuentaError('Error en el Cierre de Sesión. Inténtelo más tarde.');
+            })
+        }
+    }
+  };
+
+  const ajustes = !!userData ? ['Cerrar sesión'] : [];
+
+  const noAdmin = (!!userData && userData.userType==='admin') ? [] : ['Eliminar cuenta'];
+
   // Responsive
   const handleOpenNavMenu = event => setAnchorElNav(event.currentTarget);
   const handleOpenUserMenu = event => setAnchorElUser(event.currentTarget);
@@ -174,13 +251,20 @@ export const Encabezado = () => {
               onClose={handleCloseUserMenu}
             >
               {ajustes.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                  <Button textAlign="center">{setting}</Button>
+                <MenuItem key={setting} onClick={performLogout}>
+                  <Typography textAlign="center">{setting}</Typography>
+                </MenuItem>
+              ))}
+
+              {noAdmin.map((nA) => (
+                <MenuItem key={nA} onClick={performDelete}>
+                  <Typography textAlign="center">{nA}</Typography>
                 </MenuItem>
               ))}
             </Menu>
           </Box>}
         </Toolbar>
+        <Typography textAlign="center">{logoutError}</Typography>
       </Container>
     </AppBar>
   );

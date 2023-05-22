@@ -121,7 +121,7 @@ app.post("/loginCliente", passport.authenticate('local-cliente'), (req, res) => 
 // Endpoint /POST - Cerrar Sesión de cualquier tipo de Usuario (Admin, Empresa, Cliente)
 app.post("/logout", (req, res) => {
   req.logout(err => {
-    if (!!err) res.status(500).json({error: err});
+    if (!!err) res.status(500).json({error: "No se ha podido cerrar sesión."});
     delete req.user; // <-- Elimina el req.user
     req.session.destroy(); // <-- Destruye la sesión
     res.status(200).clearCookie('SessionCookie.SID', {path: "/"}).json({status: "Ok"}); // <-- Borrar la cookie
@@ -358,6 +358,7 @@ app.post('/mostrarevento', (req, res) => {
   consulta.then(results => res.status(200).json(results)).catch(err => res.status(500).json({ error: 'Error al obtener los eventos' }));
 });
 
+// NECESITO QUE ME CAMBIES EL ID POR EL EMAIL, QUE ES LA INFORMACIÓN QUE TENGO DEL USUARIO APARTE DE SU TIPO
 app.delete("/eliminarcliente", (req, res) => {
   const dbQuery = Cliente.query();
   const clienteId = req.body.id;
@@ -387,6 +388,7 @@ app.delete("/eliminarcliente", (req, res) => {
     });
 });
 
+// LO MISMO QUE CLIENTE
 app.delete("/eliminarempresa", (req, res) => {
   const dbQuery = EmpresaPromotora.query();
   const empresaId = req.body.id;
@@ -558,7 +560,7 @@ app.post("/pago", async (req, res) => {
 
 
 
-app.get("/user", (req, res) => !!req.isAuthenticated() ? res.status(200).send(req.session) : res.status(401).send('Sesión no iniciada!'));
+app.get("/user", (req, res) => !!req.isAuthenticated() ? res.status(200).send(req.session.passport.user) : res.status(401).send('Sesión no iniciada!'));
 
 
 
