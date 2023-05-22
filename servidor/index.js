@@ -12,11 +12,11 @@ import { development } from './knexfile.js';
 
 import ShowTiming from './models/ShowTiming.model.js';
 import Timeslot from './models/Timeslot.model.js';
-import Sales from './models/Sales.model.js';
 import EmpresaPromotora from './models/Empresa.model.js';
 import Cliente from './models/Cliente.model.js';
 import Admin from './models/Admin.model.js';
 import Evento from './models/Evento.model.js';
+import Ventas from './models/Ventas.model.js';
 
 // Instanciamos Express y el middleware de JSON y CORS
 const app = express();
@@ -43,6 +43,7 @@ EmpresaPromotora.knex(dbConnection);
 Cliente.knex(dbConnection);
 Admin.knex(dbConnection);
 Evento.knex(dbConnection);
+Ventas.knex(dbConnection);
 
 // Endpoint: POST /movies --> Devuelve todas las películas
 app.post('/movies', (req, res) => {
@@ -549,9 +550,9 @@ app.put("/modificarevento", (req, res) => {
 
 app.post("/pago", async (req, res) => {
   const cardDetails = {
-    tarjeta: req.body.tarjeta,
+    tarjeta: req.body.tarjeta_credito,
     cvv: req.body.cvv,
-    importe: req.body.importe
+    cantidad: req.body.cantidad
   };
 
   axios({
@@ -561,30 +562,32 @@ app.post("/pago", async (req, res) => {
       clientId: 3,
       paymentDetails: {
         creditCard: {
-          cardNumber: "11112222333334444",
-          cvv: 17,
+          cardNumber: "1111222233334444",
+          cvv: "123",
           expiresOn: "06/2027"
         },
-        totalAmount: 35.89,
+        totalAmount: cardDetails.cantidad,
       }
     }
   }).then(response => {
     const id = response.data._id;
-    const dbQuery = Sales.query().insert({
+    const dbQuery = Ventas.query().insert({
       id,
-      amount: String(req.body.amount),
-      client: 'test',
-      event: 'test2',
+      evento_id: req.body.evento_id,
+      cliente_id: req.body.cliente_id,
+      cantidad: req.body.cantidad,
+      fecha_compra: req.body.fecha_compra,
+      tarjeta_credito: req.body.tarjeta_credito,
+      cvv: req.body.cvv,
+      fecha_caducidad: req.body.fecha_caducidad,
+      num_entradas: req.body.num_entradas
     }).then(dbRes => {
       res.status(200).json({ status: 'Pago realizado correctamente' });
-      //debugger;
     }).catch(dbErr => {
       res.status(500).json({ status: 'Error en la inserción en la base de datos' });
-      //debugger;
     });
   }).catch(paymentErr => {
     res.status(500).json({ status: 'Error en la solicitud de pago' });
-    //debugger;
   });
 });
 
