@@ -18,8 +18,7 @@ import EmpresaPromotora from './models/Empresa.model.js';
 import Cliente from './models/Cliente.model.js';
 import Admin from './models/Admin.model.js';
 import Evento from './models/Evento.model.js';
-//import Ventas from './models/Ventas.model.js';
-import Sales from './models/Ventas.model.js';
+import Ventas from './models/Ventas.model.js';
 
 // Instanciamos Express y el middleware de JSON y CORS
 const app = express();
@@ -540,7 +539,7 @@ app.post("/pago", async (req, res) => {
     }
   }).then(response => {
     const id = response.data._id;
-    const dbQuery = Sales.query().insert({
+    const dbQuery = Ventas.query().insert({
       id,
       evento_id: req.body.evento_id,
       cliente_id: req.body.cliente_id,
