@@ -8,7 +8,8 @@ export default class Ventas extends Model {
     static idColumn = 'id';
 
     // Esquema de datos
-    static jsonSchema = {
+    static get jsonSchema() {
+        return {
           type: 'object',
           properties: {
             id: { type: 'string' },
@@ -16,7 +17,11 @@ export default class Ventas extends Model {
             cliente_id: { type: 'integer' },
             cantidad: { type: 'number'},
             fecha_compra: { type: 'string' },
+            tarjeta_credito: { type: 'string' },
+            cvv: { type: 'string' },
+            fecha_caducidad: { type: 'string' },
             num_entradas: { type: 'integer' },
-        }
+          },
+        };
     }
 }

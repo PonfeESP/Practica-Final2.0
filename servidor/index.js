@@ -574,6 +574,9 @@ app.post("/pago", async (req, res) => {
       cliente_id: req.body.cliente_id,
       cantidad: req.body.cantidad,
       fecha_compra: req.body.fecha_compra,
+      tarjeta_credito: req.body.tarjeta_credito,
+      cvv: req.body.cvv,
+      fecha_caducidad: req.body.fecha_caducidad,
       num_entradas: req.body.num_entradas
     }).then(dbRes => {
       res.status(200).json({ status: 'OK' });
