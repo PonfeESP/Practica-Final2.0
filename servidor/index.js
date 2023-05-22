@@ -16,7 +16,8 @@ import EmpresaPromotora from './models/Empresa.model.js';
 import Cliente from './models/Cliente.model.js';
 import Admin from './models/Admin.model.js';
 import Evento from './models/Evento.model.js';
-import Ventas from './models/Ventas.model.js';
+//import Ventas from './models/Ventas.model.js';
+import Sales from './models/Ventas.model.js';
 
 // Instanciamos Express y el middleware de JSON y CORS
 const app = express();
@@ -43,7 +44,8 @@ EmpresaPromotora.knex(dbConnection);
 Cliente.knex(dbConnection);
 Admin.knex(dbConnection);
 Evento.knex(dbConnection);
-Ventas.knex(dbConnection);
+//Ventas.knex(dbConnection);
+Sales.knex(dbConnection);
 
 // Endpoint: POST /movies --> Devuelve todas las películas
 app.post('/movies', (req, res) => {
@@ -549,11 +551,6 @@ app.put("/modificarevento", (req, res) => {
 
 
 app.post("/pago", async (req, res) => {
-  const cardDetails = {
-    tarjeta: req.body.tarjeta_credito,
-    cvv: req.body.cvv,
-    cantidad: req.body.cantidad
-  };
 
   axios({
     url: 'https://pse-payments-api.ecodium.dev/payment',
@@ -566,23 +563,20 @@ app.post("/pago", async (req, res) => {
           cvv: "123",
           expiresOn: "06/2027"
         },
-        totalAmount: cardDetails.cantidad,
+        totalAmount: 50,
       }
     }
   }).then(response => {
     const id = response.data._id;
-    const dbQuery = Ventas.query().insert({
+    const dbQuery = Sales.query().insert({
       id,
       evento_id: req.body.evento_id,
       cliente_id: req.body.cliente_id,
       cantidad: req.body.cantidad,
       fecha_compra: req.body.fecha_compra,
-      tarjeta_credito: req.body.tarjeta_credito,
-      cvv: req.body.cvv,
-      fecha_caducidad: req.body.fecha_caducidad,
       num_entradas: req.body.num_entradas
     }).then(dbRes => {
-      res.status(200).json({ status: 'Pago realizado correctamente' });
+      res.status(200).json({ status: 'OK' });
     }).catch(dbErr => {
       res.status(500).json({ status: 'Error en la inserción en la base de datos' });
     });
