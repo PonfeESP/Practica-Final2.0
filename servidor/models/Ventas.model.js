@@ -1,4 +1,10 @@
+// Importación de objeto Modelo
 import {Model} from 'objection';
+
+// Modelos de Relación
+import Evento from './Evento.model.js';
+import Cliente from './Cliente.model.js';
+
 export default class Ventas extends Model {
     
     // Nombre de la tabla
@@ -8,8 +14,8 @@ export default class Ventas extends Model {
     static idColumn = 'id';
 
     // Esquema de datos
-    static get jsonSchema() {
-        return {
+    static jsonSchema = {
+        
           type: 'object',
           properties: {
             id: { type: 'string' },
@@ -17,11 +23,27 @@ export default class Ventas extends Model {
             cliente_id: { type: 'integer' },
             cantidad: { type: 'number'},
             fecha_compra: { type: 'string' },
-            tarjeta_credito: { type: 'string' },
-            cvv: { type: 'string' },
-            fecha_caducidad: { type: 'string' },
             num_entradas: { type: 'integer' },
-          },
-        };
-    }
+          }
+    };
+
+    // Relaciones de Claves Foráneas
+    static relationMappings = () => ({
+      evento: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: Evento,
+        join: {
+          from: 'ventas.evento_id',
+          to: 'evento.id',
+        },
+      },
+      cliente: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: Cliente,
+        join: {
+          from: 'ventas.cliente_id',
+          to: 'cliente.id',
+        },
+      }
+    });
 }

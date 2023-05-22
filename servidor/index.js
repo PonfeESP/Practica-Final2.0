@@ -1,17 +1,19 @@
 import express from 'express';
 import cors from 'cors';
+// Componentes externas de Librerías
 import moment from 'moment';
 import Knex from 'knex';
 import session from 'express-session';
 import passport from 'passport';
 import axios from 'axios';
 
-
+// Control de Autenticación en Usuarios
 import { strategyInit } from './lib/AuthStrategy.js';
+
+// Configuración de Conexión con BD
 import { development } from './knexfile.js';
 
-import ShowTiming from './models/ShowTiming.model.js';
-import Timeslot from './models/Timeslot.model.js';
+// Esquemas de los Modelos
 import EmpresaPromotora from './models/Empresa.model.js';
 import Cliente from './models/Cliente.model.js';
 import Admin from './models/Admin.model.js';
@@ -24,6 +26,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cors({ credentials: true, origin: 'http://localhost:3000' }));
 
+// Control de Sesiones de Usuarios
 app.use(session({
   secret: 'ocio-session-cookie-key',
   name: 'SessionCookie.SID',
@@ -44,56 +47,6 @@ Cliente.knex(dbConnection);
 Admin.knex(dbConnection);
 Evento.knex(dbConnection);
 Ventas.knex(dbConnection);
-
-// Endpoint: POST /movies --> Devuelve todas las películas
-app.post('/movies', (req, res) => {
-  const consulta = Movie.query().throwIfNotFound();
-  if (!!req.body && req.body !== {}) {
-
-    // Filtrado por ID
-    if (!!req.body.id) consulta.findById(req.body.id);
-
-    // Filtrado por fechas
-    if (!!req.body.sessionBefore || !!req.body.sessionAfter) {
-      consulta.withGraphJoined('sessions');
-      if (!!req.body.sessionBefore) consulta.where('sessions.day', '<=', req.body.sessionBefore);
-      if (!!req.body.sessionAfter) consulta.where('sessions.day', '>=', req.body.sessionAfter);
-    }
-
-    consulta.then(async results => {
-      const finalObject = !!req.body.actors
-        // Filtrado por reparto
-        ? results.filter(elem => {
-          const actorsArray = elem.actors.split(',');
-          return actorsArray.every(actor => req.body.actors.includes(actor))
-        })
-        : results;
-      if (!!req.body.sessionBefore || !!req.body.sessionAfter) {
-        // Formateo de cartelera
-        const formattedObject = await Promise.all(finalObject.map(async elem => {
-          return {
-            ...elem,
-            sessions: await Promise.all(elem.sessions.map(async session => {
-              const theaterInfo = await Cinema.query().findById(session.theater_id);
-              const timingInfo = await Timeslot.query().findById(session.timing_id);
-              return {
-                cinema: theaterInfo.name,
-                day: moment(session.day).format('DD/MM/YYYY'),
-                start: timingInfo.start_time,
-                end: timingInfo.end_time,
-              }
-            }))
-          }
-        }));
-        res.status(200).json(formattedObject);
-      } else res.status(200).json(finalObject);
-
-
-    })
-  } else Movie.query().then(results => res.status(200).json(results));
-
-
-});
 
 // Endpoint: POST /cinemas --> Devuelve todos los cines
 app.post('/cinemas', (req, res) => {
@@ -140,6 +93,7 @@ app.post('/cinemas', (req, res) => {
   } else Cinema.query().then(results => res.status(200).json(results));
 });
 
+// Endpoint /POST - Inicio Sesión del Administrador
 app.post("/loginAdmin", passport.authenticate('local-administrador'), (req, res) => {
   if (!!req.user) {
     res.status(200).json({ status: 'OK' })
@@ -147,6 +101,7 @@ app.post("/loginAdmin", passport.authenticate('local-administrador'), (req, res)
   else res.status(500).json({ status: "Sesión no iniciada" });
 });
 
+// Endpoint /POST - Inicio Sesión de Empresas Promotoras
 app.post("/loginEmpresa", passport.authenticate('local-empresa'), (req, res) => {
   if (!!req.user) {
     res.status(200).json({ status: 'OK' })
@@ -154,6 +109,7 @@ app.post("/loginEmpresa", passport.authenticate('local-empresa'), (req, res) => 
   else res.status(500).json({ status: "Sesión no iniciada" });
 });
 
+// Endpoint /POST - Inicio Sesión de Clientes
 app.post("/loginCliente", passport.authenticate('local-cliente'), (req, res) => {
   if (!!req.user) {
     res.status(200).json({ status: 'OK' })
@@ -161,6 +117,7 @@ app.post("/loginCliente", passport.authenticate('local-cliente'), (req, res) => 
   else res.status(500).json({ status: "Sesión no iniciada" });
 });
 
+// Endpoint /POST - Cerrar Sesión de cualquier tipo de Usuario (Admin, Empresa, Cliente)
 app.post("/logout", (req, res) => {
   req.logout(err => {
     if (!!err) res.status(500).json({error: err});
@@ -169,56 +126,64 @@ app.post("/logout", (req, res) => {
     res.status(200).clearCookie('SessionCookie.SID', {path: "/"}).json({status: "Ok"}); // <-- Borrar la cookie
   })
 });
-
+/*
 app.post("/registroadmin", (req, res) => {
   const dbQuery = Admin.query();
-  dbQuery.findOne({ email: req.body.email }).then(async result => {
-    if (!!result) {
-      res.status(500).json({ error: "El administrador ya está registrado" });
-    } else {
-      dbQuery.insert({
-        email: req.body.email,
-        unsecurePassword: String(req.body.password),
-      }).then(insertResult => {
-        if (!!insertResult) {
-          res.status(200).json({ status: "OK" });
-        } else {
+  if(!!req.user) res.status(400).json({ status: "Sesión Iniciada"});
+  else{
+    dbQuery.findOne({ email: req.body.email }).then(async result => {
+      if (!!result) {
+        res.status(500).json({ error: "El administrador ya está registrado" });
+      } else {
+        dbQuery.insert({
+          email: req.body.email,
+          unsecurePassword: String(req.body.password),
+        }).then(insertResult => {
+          if (!!insertResult) {
+            res.status(200).json({ status: "OK" });
+          } else {
+            res.status(500).json({ status: "Error al registrar la empresa" });
+          }
+        }).catch(error => {
           res.status(500).json({ status: "Error al registrar la empresa" });
-        }
-      }).catch(error => {
-        res.status(500).json({ status: "Error al registrar la empresa" });
-      });    
-    }
-  });
+        });    
+      }
+    });
+  }
 });
+*/
 
 app.post("/registroempresa", (req, res) => {
   const dbQuery = EmpresaPromotora.query();
-  dbQuery.findOne({ email: req.body.email }).then(async result => {
-    if (!!result) {
-      res.status(500).json({ error: "La empresa ya está registrada" });
-    } else {
-      dbQuery.insert({
-        nombre_empresa: req.body.nombre_empresa,
-        email: req.body.email,
-        unsecurePassword: String(req.body.password),
-        cif: req.body.cif,
-        domicilio_social: req.body.domicilio_social,
-        telefono: req.body.telefono,
-        persona_responsable: req.body.persona_responsable,
-        capital_social: req.body.capital_social,
-        verificada: false
-      }).then(insertResult => {
-        if (!!insertResult) {
-          res.status(200).json({ status: "OK" });
-        } else {
+  if(!!req.user) res.status(400).json({ status: "Sesión Iniciada"});
+
+  else{
+    dbQuery.findOne({ email: req.body.email }).then(async result => {
+      if (!!result) {
+        res.status(500).json({ error: "La empresa ya está registrada" });
+      } else {
+        dbQuery.insert({
+          nombre_empresa: req.body.nombre_empresa,
+          email: req.body.email,
+          unsecurePassword: String(req.body.password),
+          cif: req.body.cif,
+          domicilio_social: req.body.domicilio_social,
+          telefono: req.body.telefono,
+          persona_responsable: req.body.persona_responsable,
+          capital_social: req.body.capital_social,
+          verificada: false
+        }).then(insertResult => {
+          if (!!insertResult) {
+            res.status(200).json({ status: "OK" });
+          } else {
+            res.status(500).json({ status: "Error al registrar la empresa" });
+          }
+        }).catch(error => {
           res.status(500).json({ status: "Error al registrar la empresa" });
-        }
-      }).catch(error => {
-        res.status(500).json({ status: "Error al registrar la empresa" });
-      });
-    }
-  });
+        });
+      }
+    });
+  }
 });
 
 app.post("/registrocliente", (req, res) => {
@@ -552,6 +517,7 @@ app.post("/pago", async (req, res) => {
   const cardDetails = {
     tarjeta: req.body.tarjeta_credito,
     cvv: req.body.cvv,
+    f_caducidad: req.body.fecha_caducidad,
     cantidad: req.body.cantidad
   };
 
@@ -562,8 +528,8 @@ app.post("/pago", async (req, res) => {
       clientId: 3,
       paymentDetails: {
         creditCard: {
-          cardNumber: "1111222233334444",
-          cvv: "123",
+          cardNumber: cardDetails.tarjeta,
+          cvv: cardDetails.cvv,
           expiresOn: "06/2027"
         },
         totalAmount: cardDetails.cantidad,
@@ -577,9 +543,6 @@ app.post("/pago", async (req, res) => {
       cliente_id: req.body.cliente_id,
       cantidad: req.body.cantidad,
       fecha_compra: req.body.fecha_compra,
-      tarjeta_credito: req.body.tarjeta_credito,
-      cvv: req.body.cvv,
-      fecha_caducidad: req.body.fecha_caducidad,
       num_entradas: req.body.num_entradas
     }).then(dbRes => {
       res.status(200).json({ status: 'Pago realizado correctamente' });

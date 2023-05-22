@@ -1,15 +1,15 @@
+// Importaciones de React
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import Home from './Home/Home';
 import reportWebVitals from './reportWebVitals';
 
-
+// Importación de la App
+import Home from './Home/Home_Inicio';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    
     <Home />
   </React.StrictMode>
 );
