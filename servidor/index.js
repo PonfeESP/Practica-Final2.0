@@ -46,8 +46,7 @@ EmpresaPromotora.knex(dbConnection);
 Cliente.knex(dbConnection);
 Admin.knex(dbConnection);
 Evento.knex(dbConnection);
-//Ventas.knex(dbConnection);
-Sales.knex(dbConnection);
+Ventas.knex(dbConnection);
 
 // Endpoint: POST /cinemas --> Devuelve todos los cines
 app.post('/cinemas', (req, res) => {

@@ -41,7 +41,7 @@ const Home = () => {
                 <Route exact path="/" element={<Inicio />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/empresa" element={<Empresa />} />
-                <Route path="/client" element={<Cliente />} />
+                <Route path="/cliente" element={<Cliente />} />
             
             </Routes>
         </Router>
