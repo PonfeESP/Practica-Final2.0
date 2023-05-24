@@ -124,7 +124,7 @@ app.post("/registroadmin", async (req, res) => {
     try {
       const result = await comprobarEmail(req.body.email);
       if (result.cliente || result.admin || result.empresa) {
-        return res.status(500).json({ error: "El administrador ya está registrado" });
+        return res.status(500).json({ error: "Este email ya esta registrado" });
       } else {
         dbQuery.insert({
           email: req.body.email,
@@ -161,7 +161,7 @@ app.post("/registroempresa", async (req, res) => {
       const emailExiste = await comprobarEmail(email);
 
       if (emailExiste) {
-        return res.status(500).json({ error: "El email ya está registrado" });
+        return res.status(500).json({ error: "Este email ya esta registrado" });
       } else {
         dbQuery.insert({
           nombre_empresa: req.body.nombre_empresa,
@@ -199,7 +199,7 @@ app.post("/registrocliente", async (req, res) => {
     const emailExiste = await comprobarEmail(email);
 
     if (emailExiste) {
-      return res.status(500).json({ error: "El cliente ya está registrado" });
+      return res.status(500).json({ error: "Este email ya esta registrado" });
     }
 
     const fechaNacimiento = req.body.fechanacimiento;
@@ -306,19 +306,53 @@ app.post("/registroeventos", (req, res) => {
 
 
 
-app.post("/verificarempresa", async (req, res) => {
-  try {
-    const empresa = await EmpresaPromotora.query().findOne({ id: req.body.id });
-    if (!empresa) {
-      return res.status(404).json({ error: "La empresa no existe" });
-    } else {
-      await EmpresaPromotora.query().patch({ verificada: true }).where({ id: req.body.id });
-      return res.status(200).json({ status: "OK" });
-    }
-  } catch (error) {
-    return res.status(500).json({ status: "Error al verificar la empresa" });
-  }
+app.put("/verificarempresa", (req, res) => {
+  const empresaId = req.body.id;
+
+  EmpresaPromotora.query()
+    .findOne({ id: empresaId })
+    .then(empresa => {
+      if (!empresa) {
+        return res.status(404).json({ error: "La empresa no existe" });
+      } else {
+        EmpresaPromotora.query()
+          .patch({ verificada: true })
+          .where({ id: empresaId })
+          .then(() => {
+            return res.status(200).json({ status: "OK" });
+          })
+          .catch(error => {
+            return res.status(500).json({ error: "Error al verificar la empresa" });
+          });
+      }
+    })
+    .catch(error => {
+      return res.status(500).json({ error: "Error al buscar la empresa" });
+    });
 });
+
+app.get("/mensajeverificada", (req, res) => {
+  const empresaId = req.body.id;
+
+  EmpresaPromotora.query()
+    .findById(empresaId)
+    .then(empresa => {
+      if (empresa) {
+        const verificada = empresa.verificada;
+        if (verificada) {
+          res.status(200).json({ mensaje: "La empresa está verificada" });
+        } else {
+          res.status(200).json({ mensaje: "La empresa no está verificada" });
+        }
+      } else {
+        res.status(404).json({ error: "La empresa no existe" });
+      }
+    })
+    .catch(err => {
+      res.status(500).json({ error: "Error al obtener la información de la empresa" });
+    });
+});
+
 
 app.post('/mostrarempresas', (req, res) => {
   const consulta = EmpresaPromotora.query();
@@ -337,37 +371,29 @@ app.post('/mostrarempresas', (req, res) => {
 
 
 
-app.post('/mostrarevento', (req, res) => {
-  const consulta = Evento.query().throwIfNotFound();
+app.get('/mostrareventos', (req, res) => { //endpoint pa cliente
+  const consulta = Evento.query();
+  const fechaActual = moment().format('YYYY-MM-DD'); 
 
-  //esto me lo hace el front lo de ordenar
+  consulta.where('fecha', '>', fechaActual);
 
-  if (!!req.body && req.body !== {}) {
-    // Filtrado id para clientes
-    if (!!req.body.id) consulta.findById(req.body.id);
-
-    // Filtrado fecha para clientes
-    if (!!req.body.fecha) consulta.where('fecha', '=', req.body.fecha);
-
-    // Filtrado artista para clientes
-    if (!!req.body.artista) consulta.where('artista', '=', req.body.artista);
-
-    // Filtrado para empresas
-    if (!!req.body.empresa_promotora_id) consulta.where('empresa_promotora_id', '=', req.body.empresa_promotora_id);
-
-  } else Evento.query().then(results => res.status(200).json(results));
-
-  // Ordenar por ID, fecha o artista
-  if (req.body.order === 'id') {
-    consulta.orderBy('id');
-  } else if (req.body.order === 'fecha') {
-    consulta.orderBy('fecha');
-  } else if (req.body.order === 'artista') {
-    consulta.orderBy('artista');
-  }
-
-  consulta.then(results => res.status(200).json(results)).catch(err => res.status(500).json({ error: 'Error al obtener los eventos' }));
+  consulta
+    .then(results => res.status(200).json(results))
+    .catch(err => res.status(500).json({ error: 'Error al obtener los eventos' }));
 });
+
+app.get('/mostrareventos/empresa', (req, res) => { //endpoint pa empresas
+  const consulta = Evento.query();
+  const idempresa = req.body.id;
+  const fechaActual = moment().format('YYYY-MM-DD'); 
+
+  consulta.where('fecha', '>', fechaActual).where('empresa_promotora_id', idempresa); //empresas pueden ver los eventos suyos ya pasados?
+
+  consulta
+    .then(results => res.status(200).json(results))
+    .catch(err => res.status(500).json({ error: 'Error al obtener los eventos' }));
+});
+
 
 // NECESITO QUE ME CAMBIES EL ID POR EL EMAIL, QUE ES LA INFORMACIÓN QUE TENGO DEL USUARIO APARTE DE SU TIPO
 app.delete("/eliminarcliente", (req, res) => {
