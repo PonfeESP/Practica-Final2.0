@@ -48,51 +48,6 @@ Admin.knex(dbConnection);
 Evento.knex(dbConnection);
 Ventas.knex(dbConnection);
 
-// Endpoint: POST /cinemas --> Devuelve todos los cines
-app.post('/cinemas', (req, res) => {
-  const consulta = Cinema.query().throwIfNotFound();
-  if (!!req.body && req.body !== {}) {
-    // Filtrado por ID
-    if (!!req.body.id) consulta.findById(req.body.id);
-
-    // Filtrado por fechas
-    if (!!req.body.sessionBefore || !!req.body.sessionAfter || !!req.body.withMovie) {
-      consulta.withGraphJoined('sessions');
-      if (!!req.body.sessionBefore) consulta.where('sessions.day', '<=', req.body.sessionBefore);
-      if (!!req.body.sessionAfter) consulta.where('sessions.day', '>=', req.body.sessionAfter);
-      if (!!req.body.withMovie) consulta.where('sessions.movie_id', '=', req.body.withMovie)
-    }
-
-    // Con cartelera
-    if (!!req.body.withCatalog) {
-      consulta.withGraphJoined('catalog.sessions').then(async resp => {
-        const responseObject = [resp].flat(); // Solución al bug que se desencadena si resp no es un array
-        const finalObject = await Promise.all(responseObject.map(async cinema => {
-          return {
-            ...cinema,
-            catalog: await Promise.all(cinema.catalog.map(async movie => {
-              return {
-                ...movie,
-                sessions: await Promise.all(movie.sessions.filter(movie => movie.theater_id === cinema.id).map(async movie => {
-                  const timetable = await Timeslot.query().findById(movie.timing_id);
-                  return {
-                    date: moment(movie.day).format('DD/MM/YYYY'),
-                    start: timetable.start_time,
-                    end: timetable.end_time
-                  }
-                }))
-              }
-            }))
-          }
-        }));
-        res.status(200).json(finalObject);
-      }).catch(err => res.status(404).json("error"));
-    } else {
-      consulta.then(results => res.status(200).json(results)).catch(err => res.status(404).json("error"));
-    }
-  } else Cinema.query().then(results => res.status(200).json(results));
-});
-
 // Endpoint /POST - Inicio Sesión del Administrador
 app.post("/loginAdmin", passport.authenticate('local-administrador'), (req, res) => {
   if (!!req.user) {
@@ -120,47 +75,72 @@ app.post("/loginCliente", passport.authenticate('local-cliente'), (req, res) => 
 // Endpoint /POST - Cerrar Sesión de cualquier tipo de Usuario (Admin, Empresa, Cliente)
 app.post("/logout", (req, res) => {
   req.logout(err => {
-    if (!!err) res.status(500).json({error: "No se ha podido cerrar sesión."});
+    if (!!err) res.status(500).json({ error: "No se ha podido cerrar sesión." });
     delete req.user; // <-- Elimina el req.user
     req.session.destroy(); // <-- Destruye la sesión
-    res.status(200).clearCookie('SessionCookie.SID', {path: "/"}).json({status: "Ok"}); // <-- Borrar la cookie
+    res.status(200).clearCookie('SessionCookie.SID', { path: "/" }).json({ status: "Ok" }); // <-- Borrar la cookie
   })
 });
-/*
-app.post("/registroadmin", (req, res) => {
+
+async function comprobarEmail(email) {
+  const queryCliente = Cliente.query();
+  const queryAdmin = Admin.query();
+  const queryEmpresa = EmpresaPromotora.query();
+
+  const [cliente, admin, empresa] = await Promise.all([
+    queryCliente.findOne({ email }),
+    queryAdmin.findOne({ email }),
+    queryEmpresa.findOne({ email })
+  ]);
+
+  return { cliente, admin, empresa };
+}
+
+app.post("/registroadmin", async (req, res) => {
   const dbQuery = Admin.query();
-  if(!!req.user) res.status(400).json({ status: "Sesión Iniciada"});
-  else{
-    dbQuery.findOne({ email: req.body.email }).then(async result => {
+  if (!!req.user) {
+    return res.status(400).json({ status: "Sesión Iniciada" });
+  } else {
+    try {
+      const result = await comprobarEmail(req.body.email);
       if (!!result) {
-        res.status(500).json({ error: "El administrador ya está registrado" });
+        return res.status(500).json({ error: "El administrador ya está registrado" });
       } else {
         dbQuery.insert({
           email: req.body.email,
           unsecurePassword: String(req.body.password),
-        }).then(insertResult => {
+        })
+        .then(insertResult => {
           if (!!insertResult) {
-            res.status(200).json({ status: "OK" });
+            return res.status(200).json({ status: "OK" });
           } else {
-            res.status(500).json({ status: "Error al registrar la empresa" });
+            return res.status(500).json({ status: "Error al registrar el administrador" });
           }
-        }).catch(error => {
-          res.status(500).json({ status: "Error al registrar la empresa" });
-        });    
+        })
+        .catch(error => {
+          return res.status(500).json({ status: "Error al registrar el administrador" });
+        });
       }
-    });
+    } catch (error) {
+      return res.status(500).json({ status: "Error al registrar el administrador" });
+    }
   }
 });
-*/
 
-app.post("/registroempresa", (req, res) => {
+
+
+
+app.post("/registroempresa", async (req, res) => {
   const dbQuery = EmpresaPromotora.query();
-  if(!!req.user) res.status(400).json({ status: "Sesión Iniciada"});
+  if (!!req.user) {
+    return res.status(400).json({ status: "Sesión Iniciada" });
+  } else {
+    try {
+      const email = req.body.email;
+      const emailExiste = await comprobarEmail(email);
 
-  else{
-    dbQuery.findOne({ email: req.body.email }).then(async result => {
-      if (!!result) {
-        res.status(500).json({ error: "La empresa ya está registrada" });
+      if (emailExiste) {
+        return res.status(500).json({ error: "El email ya está registrado" });
       } else {
         dbQuery.insert({
           nombre_empresa: req.body.nombre_empresa,
@@ -172,24 +152,32 @@ app.post("/registroempresa", (req, res) => {
           persona_responsable: req.body.persona_responsable,
           capital_social: req.body.capital_social,
           verificada: false
-        }).then(insertResult => {
-          if (!!insertResult) {
-            res.status(200).json({ status: "OK" });
-          } else {
-            res.status(500).json({ status: "Error al registrar la empresa" });
-          }
-        }).catch(error => {
-          res.status(500).json({ status: "Error al registrar la empresa" });
-        });
+        })
+          .then(insertResult => {
+            if (!!insertResult) {
+              return res.status(200).json({ status: "OK" });
+            } else {
+              return res.status(500).json({ status: "Error al registrar la empresa" });
+            }
+          })
+          .catch(error => {
+            return res.status(500).json({ status: "Error al registrar la empresa" });
+          });
       }
-    });
+    } catch (error) {
+      return res.status(500).json({ status: "Error al registrar la empresa" });
+    }
   }
 });
 
-app.post("/registrocliente", (req, res) => {
+
+app.post("/registrocliente", async (req, res) => {
   const dbQuery = Cliente.query();
-  dbQuery.findOne({ email: req.body.email }).then(async result => {
-    if (!!result) {
+  try {
+    const email = req.body.email;
+    const emailExiste = await comprobarEmail(email);
+
+    if (emailExiste) {
       return res.status(500).json({ error: "El cliente ya está registrado" });
     }
 
@@ -228,8 +216,11 @@ app.post("/registrocliente", (req, res) => {
       .catch(error => {
         return res.status(500).json({ status: "Error al registrar el cliente" });
       });
-  });
+  } catch (error) {
+    return res.status(500).json({ status: "Error al registrar el cliente" });
+  }
 });
+
 
 
 app.post("/registroeventos", (req, res) => {
@@ -277,17 +268,17 @@ app.post("/registroeventos", (req, res) => {
           })
           .then(insertResult => {
             if (!!insertResult) {
-              res.status(200).json({ status: "OK" });
+              return res.status(200).json({ status: "OK" });
             } else {
-              res.status(500).json({ status: "Error al registrar el evento" });
+              return res.status(500).json({ status: "Error al registrar el evento" });
             }
           })
           .catch(error => {
-            res.status(500).json({ status: "Error al registrar el evento" });
+            return res.status(500).json({ status: "Error al registrar el evento" });
           });
       })
       .catch(error => {
-        res.status(500).json({ status: "Error al buscar la empresa promotora" });
+        return res.status(500).json({ status: "Error al buscar la empresa promotora" });
       });
   });
 });
@@ -298,13 +289,13 @@ app.post("/verificarempresa", async (req, res) => {
   try {
     const empresa = await EmpresaPromotora.query().findOne({ id: req.body.id });
     if (!empresa) {
-      res.status(404).json({ error: "La empresa no existe" });
+      return res.status(404).json({ error: "La empresa no existe" });
     } else {
       await EmpresaPromotora.query().patch({ verificada: true }).where({ id: req.body.id });
-      res.status(200).json({ status: "OK" });
+      return res.status(200).json({ status: "OK" });
     }
   } catch (error) {
-    res.status(500).json({ status: "Error al verificar la empresa" });
+    return res.status(500).json({ status: "Error al verificar la empresa" });
   }
 });
 
@@ -342,7 +333,7 @@ app.post('/mostrarevento', (req, res) => {
 
     // Filtrado para empresas
     if (!!req.body.empresa_promotora_id) consulta.where('empresa_promotora_id', '=', req.body.empresa_promotora_id);
-  
+
   } else Evento.query().then(results => res.status(200).json(results));
 
   // Ordenar por ID, fecha o artista
@@ -372,18 +363,18 @@ app.delete("/eliminarcliente", (req, res) => {
           .deleteById(clienteId)
           .then(contador => {
             if (contador > 0) {
-              res.status(200).json({ status: "OK" });
+              return res.status(200).json({ status: "OK" });
             } else {
-              res.status(500).json({ error: "Error al eliminar el cliente" });
+              return res.status(500).json({ error: "Error al eliminar el cliente" });
             }
           })
           .catch(error => {
-            res.status(500).json({ error: "Error al eliminar el cliente" });
+            return res.status(500).json({ error: "Error al eliminar el cliente" });
           });
       }
     })
     .catch(error => {
-      res.status(500).json({ error: "Error al buscar el cliente" });
+      return res.status(500).json({ error: "Error al buscar el cliente" });
     });
 });
 
@@ -396,24 +387,24 @@ app.delete("/eliminarempresa", (req, res) => {
     .findById(empresaId)
     .then(empresa => {
       if (!empresa) {
-        res.status(404).json({ error: "La empresa no existe" });
+        return res.status(404).json({ error: "La empresa no existe" });
       } else {
         dbQuery
           .deleteById(empresaId)
           .then(contador => {
             if (contador > 0) {
-              res.status(200).json({ status: "OK" });
+              return res.status(200).json({ status: "OK" });
             } else {
-              res.status(500).json({ error: "Error al eliminar la empresa" });
+              return res.status(500).json({ error: "Error al eliminar la empresa" });
             }
           })
           .catch(error => {
-            res.status(500).json({ error: "Error al eliminar la empresa" });
+            return res.status(500).json({ error: "Error al eliminar la empresa" });
           });
       }
     })
     .catch(error => {
-      res.status(500).json({ error: "Error al buscar la empresa" });
+      return res.status(500).json({ error: "Error al buscar la empresa" });
     });
 });
 
@@ -426,7 +417,7 @@ app.delete("/eliminarevento", (req, res) => {
     .findById(eventoId)
     .then(evento => {
       if (!evento) {
-        res.status(404).json({ error: "El evento no existe" });
+        return res.status(404).json({ error: "El evento no existe" });
       } else {
         const fechaEvento = moment(evento.fecha, 'YYYY-MM-DD');
         const horaEvento = moment(evento.hora, 'HH:mm');
@@ -441,21 +432,21 @@ app.delete("/eliminarevento", (req, res) => {
             .deleteById(eventoId)
             .then(contador => {
               if (contador > 0) {
-                res.status(200).json({ status: "OK" });
+                return res.status(200).json({ status: "OK" });
               } else {
-                res.status(500).json({ error: "Error al eliminar el evento" });
+                return res.status(500).json({ error: "Error al eliminar el evento" });
               }
             })
             .catch(error => {
-              res.status(500).json({ error: "Error al eliminar el evento" });
+              return res.status(500).json({ error: "Error al eliminar el evento" });
             });
         } else {
-          res.status(400).json({ error: "Quedan menos de 24H hasta el evento, no puede ser eliminado" });
+          return res.status(400).json({ error: "Quedan menos de 24H hasta el evento, no puede ser eliminado" });
         }
       }
     })
     .catch(error => {
-      res.status(500).json({ error: "Error al buscar el evento" });
+      return res.status(500).json({ error: "Error al buscar el evento" });
     });
 });
 
@@ -475,7 +466,7 @@ app.put("/modificarevento", (req, res) => {
     .findById(eventoId)
     .then(evento => {
       if (!evento) {
-        res.status(404).json({ error: "El evento no existe" });
+        return res.status(404).json({ error: "El evento no existe" });
       } else {
         const fechaEvento = moment(fechamod, 'YYYY-MM-DD');
         const horaEvento = moment(horamod, 'HH:mm');
@@ -488,31 +479,54 @@ app.put("/modificarevento", (req, res) => {
         if (valido > 24) {
           evento
             .$query()
-            .patch({ 
+            .patch({
               nombre: nombremod,
               artista: artistamod,
-              ubicacion: ubicacionmod ,
-              aforo: aforomod, 
-              descripcion: descripcionmod, 
-              fecha: fechamod, 
-              hora: horamod, 
+              ubicacion: ubicacionmod,
+              aforo: aforomod,
+              descripcion: descripcionmod,
+              fecha: fechamod,
+              hora: horamod,
               precio_entrada: preciomod,
             })
             .then(() => {
-              res.status(200).json({ status: "OK" });
+              return res.status(200).json({ status: "OK" });
             })
             .catch(error => {
-              res.status(500).json({ error: "Error al modificar la información del evento" });
+              return res.status(500).json({ error: "Error al modificar la información del evento" });
             });
         } else {
-          res.status(400).json({ error: "Quedan menos de 24 horas hasta el evento, no se puede modificar" });
+          return res.status(400).json({ error: "Quedan menos de 24 horas hasta el evento, no se puede modificar" });
         }
       }
     })
     .catch(error => {
-      res.status(500).json({ error: "Error al buscar el evento" });
+      return res.status(500).json({ error: "Error al buscar el evento" });
     });
 });
+
+async function actualizarAforo(Idevento, entradascompradas, res) {
+  try {
+    const evento = await Evento.query().findById(Idevento);
+    if (!evento) {
+      throw new Error("El evento no existe");
+    }
+
+    const aforoOcupado = evento.aforo_ocupado;
+    const aforoMax = evento.aforo;
+    const aforoDisponible = aforoMax - aforoOcupado;
+    if (entradascompradas > aforoDisponible) {
+      throw new Error("No hay suficientes entradas disponibles");
+    }
+
+    const nuevoAforoOcupado = aforoOcupado + entradascompradas;
+
+    await Evento.query().findById(Idevento).patch({ aforo_ocupado: nuevoAforoOcupado });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+    throw new Error("Error al modificar el aforo del evento: " + error.message);
+  }
+}
 
 
 app.post("/pago", async (req, res) => {
@@ -522,7 +536,6 @@ app.post("/pago", async (req, res) => {
     f_caducidad: req.body.fecha_caducidad,
     cantidad: req.body.cantidad
   };
-
 
   axios({
     url: 'https://pse-payments-api.ecodium.dev/payment',
@@ -538,22 +551,29 @@ app.post("/pago", async (req, res) => {
         totalAmount: 50,
       }
     }
-  }).then(response => {
+  }).then(async response => {
     const id = response.data._id;
+    const eventoId = req.body.evento_id;
+    const entradasCompradas = req.body.num_entradas;
+
+    // Actualizar el aforo del evento
+    await actualizarAforo(eventoId, entradasCompradas, res);
+
+    // Insertar la venta en la base de datos
     const dbQuery = Ventas.query().insert({
       id,
-      evento_id: req.body.evento_id,
+      evento_id: eventoId,
       cliente_id: req.body.cliente_id,
       cantidad: req.body.cantidad,
       fecha_compra: req.body.fecha_compra,
-      num_entradas: req.body.num_entradas
+      num_entradas: entradasCompradas
     }).then(dbRes => {
-      res.status(200).json({ status: 'OK' });
+      return res.status(200).json({ status: 'OK' });
     }).catch(dbErr => {
-      res.status(500).json({ status: 'Error en la inserción en la base de datos' });
+      return res.status(500).json({ status: 'Error en la inserción en la base de datos' });
     });
   }).catch(paymentErr => {
-    res.status(500).json({ status: 'Error en la solicitud de pago' });
+    return res.status(500).json({ status: 'Error en la solicitud de pago' });
   });
 });
 
