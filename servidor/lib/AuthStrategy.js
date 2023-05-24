@@ -51,6 +51,7 @@ export const strategyInit = passport => {
       done(err);
     });
   }));
+  
 
   passport.serializeUser((user, done) => {
     const userType = user instanceof Cliente ? 'cliente' : user instanceof EmpresaPromotora ? 'empresa' : user instanceof Admin ? 'admin' : undefined
@@ -62,10 +63,13 @@ export const strategyInit = passport => {
 
   passport.deserializeUser((user, done) => { // REVISAR
     const dbQuery = user.userType === 'cliente'
-      ? Cliente.query().findById(user.email)
-      : user.userType === 'admin'
-        ? Admin.query().findById(user.email)
-        : null;
+  ? Cliente.query().findById(user.email)
+  : user.userType === 'admin'
+    ? Admin.query().findById(user.email)
+    : user.userType === 'empresa'
+      ? EmpresaPromotora.query().findById(user.email)
+      : null;
+
     if (!!dbQuery){
       dbQuery.then(res => done(null, res))
     } else done (null, null);

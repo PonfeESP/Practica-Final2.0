@@ -49,11 +49,32 @@ Evento.knex(dbConnection);
 Ventas.knex(dbConnection);
 
 // Endpoint /POST - Inicio Sesión del Administrador
-app.post("/loginAdmin", passport.authenticate('local-administrador'), (req, res) => {
+/*app.post("/loginAdmin", passport.authenticate('local-administrador'), (req, res) => {
   if (!!req.user) {
-    res.status(200).json({ status: 'OK' })
+    res.status(200).json({ status: 'OK' });
+  } else if (req.authInfo && req.authInfo.error === 'Administrador desconocido') {
+    res.status(401).json({ error: 'Administrador desconocido' });
+  } else {
+    res.status(500).json({ error: 'Sesión no iniciada' });
   }
-  else res.status(500).json({ status: "Sesión no iniciada" });
+});
+*/
+
+app.post("/loginAdmin", (req, res, next) => {
+  passport.authenticate('local-administrador', (err, user, info) => {
+    if (err) {
+      return res.status(500).json({ error: 'Error interno del servidor' });
+    }
+    if (!user) {
+      return res.status(401).json({ error: 'Acceso no autorizado' });
+    }
+    req.logIn(user, (err) => {
+      if (err) {
+        return res.status(500).json({ error: 'Error interno del servidor' });
+      }
+      return res.status(200).json({ status: 'OK' });
+    });
+  })(req, res, next);
 });
 
 // Endpoint /POST - Inicio Sesión de Empresas Promotoras
@@ -87,14 +108,13 @@ async function comprobarEmail(email) {
   const queryAdmin = Admin.query();
   const queryEmpresa = EmpresaPromotora.query();
 
-  const [cliente, admin, empresa] = await Promise.all([
-    queryCliente.findOne({ email }),
-    queryAdmin.findOne({ email }),
-    queryEmpresa.findOne({ email })
-  ]);
+  const cliente = await queryCliente.findOne({ email });
+  const admin = await queryAdmin.findOne({ email });
+  const empresa = await queryEmpresa.findOne({ email });
 
   return { cliente, admin, empresa };
 }
+
 
 app.post("/registroadmin", async (req, res) => {
   const dbQuery = Admin.query();
@@ -103,7 +123,7 @@ app.post("/registroadmin", async (req, res) => {
   } else {
     try {
       const result = await comprobarEmail(req.body.email);
-      if (!!result) {
+      if (result.cliente || result.admin || result.empresa) {
         return res.status(500).json({ error: "El administrador ya está registrado" });
       } else {
         dbQuery.insert({
@@ -124,6 +144,7 @@ app.post("/registroadmin", async (req, res) => {
     } catch (error) {
       return res.status(500).json({ status: "Error al registrar el administrador" });
     }
+    
   }
 });
 
