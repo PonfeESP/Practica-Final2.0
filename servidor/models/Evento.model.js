@@ -1,5 +1,4 @@
 import { Model } from 'objection';
-import bcrypt from 'bcryptjs';
 import EmpresaPromotora from './Empresa.model.js';
 
 export default class Evento extends Model {

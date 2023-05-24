@@ -60,7 +60,7 @@ export const strategyInit = passport => {
     })
   });
 
-  passport.deserializeUser((user, done) => {
+  passport.deserializeUser((user, done) => { // REVISAR
     const dbQuery = user.userType === 'cliente'
       ? Cliente.query().findById(user.email)
       : user.userType === 'admin'
