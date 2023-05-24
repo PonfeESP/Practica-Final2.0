@@ -63,14 +63,14 @@ Ventas.knex(dbConnection);
 app.post("/loginAdmin", (req, res, next) => {
   passport.authenticate('local-administrador', (err, user, info) => {
     if (err) {
-      return res.status(500).json({ error: 'Error interno del servidor' });
+      return res.status(500).json({ error: 'Error del servidor' });
     }
     if (!user) {
-      return res.status(401).json({ error: 'Acceso no autorizado' });
+      return res.status(401).json({ error: 'Acceso denegado' });
     }
     req.logIn(user, (err) => {
       if (err) {
-        return res.status(500).json({ error: 'Error interno del servidor' });
+        return res.status(500).json({ error: 'Error del servidor' });
       }
       return res.status(200).json({ status: 'OK' });
     });
@@ -104,13 +104,13 @@ app.post("/logout", (req, res) => {
 });
 
 async function comprobarEmail(email) {
-  const queryCliente = Cliente.query();
-  const queryAdmin = Admin.query();
-  const queryEmpresa = EmpresaPromotora.query();
+  const varCliente = Cliente.query();
+  const varAdmin = Admin.query();
+  const varEmpresa = EmpresaPromotora.query();
 
-  const cliente = await queryCliente.findOne({ email });
-  const admin = await queryAdmin.findOne({ email });
-  const empresa = await queryEmpresa.findOne({ email });
+  const cliente = await varCliente.findOne({ email });
+  const admin = await varAdmin.findOne({ email });
+  const empresa = await varEmpresa.findOne({ email });
 
   return { cliente, admin, empresa };
 }
@@ -122,16 +122,16 @@ app.post("/registroadmin", async (req, res) => {
     return res.status(400).json({ status: "Sesión Iniciada" });
   } else {
     try {
-      const result = await comprobarEmail(req.body.email);
-      if (result.cliente || result.admin || result.empresa) {
+      const resultado = await comprobarEmail(req.body.email);
+      if (resultado.cliente || resultado.admin || resultado.empresa) {
         return res.status(500).json({ error: "Este email ya esta registrado" });
       } else {
         dbQuery.insert({
           email: req.body.email,
           unsecurePassword: String(req.body.password),
         })
-        .then(insertResult => {
-          if (!!insertResult) {
+        .then(insertResultadp => {
+          if (!!insertResultadp) {
             return res.status(200).json({ status: "OK" });
           } else {
             return res.status(500).json({ status: "Error al registrar el administrador" });
@@ -157,10 +157,8 @@ app.post("/registroempresa", async (req, res) => {
     return res.status(400).json({ status: "Sesión Iniciada" });
   } else {
     try {
-      const email = req.body.email;
-      const emailExiste = await comprobarEmail(email);
-
-      if (emailExiste) {
+      const resultado = await comprobarEmail(req.body.email);
+      if (resultado.cliente || resultado.admin || resultado.empresa) {
         return res.status(500).json({ error: "Este email ya esta registrado" });
       } else {
         dbQuery.insert({
@@ -196,11 +194,8 @@ app.post("/registrocliente", async (req, res) => {
   const dbQuery = Cliente.query();
   try {
     const email = req.body.email;
-    const emailExiste = await comprobarEmail(email);
-
-    if (emailExiste) {
-      return res.status(500).json({ error: "Este email ya esta registrado" });
-    }
+    const resultado = await comprobarEmail(email);
+    const emailExiste = resultado.cliente || resultado.admin || resultado.empresa;
 
     const fechaNacimiento = req.body.fechanacimiento;
     const isValidDate = moment(fechaNacimiento, 'YYYY-MM-DD', true).isValid();
@@ -215,6 +210,10 @@ app.post("/registrocliente", async (req, res) => {
 
     if (edad < edadMinima) {
       return res.status(400).json({ error: "Debes ser mayor de 18 años para registrarte" });
+    }
+
+    if (emailExiste) {
+      return res.status(500).json({ error: "Este email ya está registrado" });
     }
 
     dbQuery
@@ -287,8 +286,8 @@ app.post("/registroeventos", (req, res) => {
             precio_entrada: req.body.precio_entrada,
             empresa_promotora_id: req.body.empresa_promotora_id
           })
-          .then(insertResult => {
-            if (!!insertResult) {
+          .then(insertar => {
+            if (!!insertar) {
               return res.status(200).json({ status: "OK" });
             } else {
               return res.status(500).json({ status: "Error al registrar el evento" });
@@ -354,7 +353,7 @@ app.get("/mensajeverificada", (req, res) => {
 });
 
 
-app.post('/mostrarempresas', (req, res) => {
+app.get('/mostrarempresas', (req, res) => {
   const consulta = EmpresaPromotora.query();
 
   if (!!req.body && req.body !== {}) {
@@ -365,7 +364,7 @@ app.post('/mostrarempresas', (req, res) => {
   }
 
   consulta
-    .then(results => res.status(200).json(results))
+    .then(resultado => res.status(200).json(resultado))
     .catch(err => res.status(500).json({ error: 'Error al obtener las empresas' }));
 });
 
@@ -378,7 +377,7 @@ app.get('/mostrareventos', (req, res) => { //endpoint pa cliente
   consulta.where('fecha', '>', fechaActual);
 
   consulta
-    .then(results => res.status(200).json(results))
+    .then(resultado => res.status(200).json(resultado))
     .catch(err => res.status(500).json({ error: 'Error al obtener los eventos' }));
 });
 
@@ -390,7 +389,7 @@ app.get('/mostrareventos/empresa', (req, res) => { //endpoint pa empresas
   consulta.where('fecha', '>', fechaActual).where('empresa_promotora_id', idempresa); //empresas pueden ver los eventos suyos ya pasados?
 
   consulta
-    .then(results => res.status(200).json(results))
+    .then(resultado => res.status(200).json(resultado))
     .catch(err => res.status(500).json({ error: 'Error al obtener los eventos' }));
 });
 
@@ -424,6 +423,12 @@ app.delete("/eliminarcliente", (req, res) => {
       return res.status(500).json({ error: "Error al buscar el cliente" });
     });
 });
+
+async function modVentas(eventos) {
+  await Ventas.query()
+    .whereIn('evento_id', eventos.map(evento => evento.id))
+    .patch({ eventoId: null });
+}
 
 // LO MISMO QUE CLIENTE
 app.delete("/eliminarempresa", (req, res) => {
@@ -515,8 +520,8 @@ app.put("/modificarevento", (req, res) => {
       if (!evento) {
         return res.status(404).json({ error: "El evento no existe" });
       } else {
-        const fechaEvento = moment(fechamod, 'YYYY-MM-DD');
-        const horaEvento = moment(horamod, 'HH:mm');
+        const fechaEvento = moment(evento.fecha, 'YYYY-MM-DD');
+        const horaEvento = moment(evento.hora, 'HH:mm');
         const fechaActual = moment();
         const horaActual = moment();
         const tiempoEvento = moment(fechaEvento).set({ 'hour': horaEvento.hours(), 'minute': horaEvento.minutes() });
@@ -552,7 +557,7 @@ app.put("/modificarevento", (req, res) => {
     });
 });
 
-async function actualizarAforo(Idevento, entradascompradas, res) {
+async function actualizarAforo(Idevento, entradascompradas, res) { //No me funciona con res.status no se pq
   try {
     const evento = await Evento.query().findById(Idevento);
     if (!evento) {
@@ -606,7 +611,6 @@ app.post("/pago", async (req, res) => {
     // Actualizar el aforo del evento
     await actualizarAforo(eventoId, entradasCompradas, res);
 
-    // Insertar la venta en la base de datos
     const dbQuery = Ventas.query().insert({
       id,
       evento_id: eventoId,
