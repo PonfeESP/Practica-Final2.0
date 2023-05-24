@@ -99,7 +99,8 @@ export const Registro = () => {
 
                 if (password !== confirmPassword) setRegistroError('Las contraseñas son distintas. Pruébelo de nuevo.');
                 else{
-                    axios({
+                    if(!!cif && !!capital_social && !!domicilio_social && !!nombre_empresa && !!persona_responsable){
+                      axios({
                         url: 'http://localhost:8000/registroempresa',
                         method: 'POST',
                         withCredentials: true,
@@ -113,18 +114,20 @@ export const Registro = () => {
                           persona_responsable: persona_responsable,
                           telefono: telefono
                         },
-                    })
-                    .then((response) => {
-                        if (response.data.status === 'OK') {
-                            setRegistroError('El usuario se ha registrado como Empresa Promotora.');
-                        } else {
-                            setRegistroError('El usuario ya existe como Empresa Promotora.');
-                        }
-                    })
-                    .catch((error) => {
-                        console.log('Error en el registro:', error);
-                        setRegistroError('Error en el registro. Inténtalo de nuevo, por favor.');
-                    });
+                      })
+                      .then((response) => {
+                          if (response.data.status === 'OK') {
+                              setRegistroError('El usuario se ha registrado como Empresa Promotora.');
+                          } else {
+                              setRegistroError('El usuario ya existe como Empresa Promotora.');
+                          }
+                      })
+                      .catch((error) => {
+                          console.log('Error en el registro:', error);
+                          setRegistroError('Error en el registro. Inténtalo de nuevo, por favor.');
+                      });
+                    }
+                    else setRegistroError('Todos los campos son OBLIGATORIOS. Inténtelo de nuevo.');
                 }
             }else{
                 setDNIError(false);
@@ -140,7 +143,8 @@ export const Registro = () => {
 
                 if (password !== confirmPassword) setRegistroError('Las contraseñas son distintas. Pruébelo de nuevo.');
                 else{
-                    axios({
+                    if(!!dni && !!nombre && !!fechanacimiento && !!apellidos){
+                      axios({
                         url: 'http://localhost:8000/registrocliente',
                         method: 'POST',
                         withCredentials: true,
@@ -153,18 +157,20 @@ export const Registro = () => {
                           fechanacimiento: fechanacimiento,
                           telefono: telefono
                         },
-                    })
-                    .then((response) => {
-                        if (response.data.status === 'OK') {
-                            setRegistroError('El usuario se ha registrado como Cliente.');
-                        } else {
-                            setRegistroError('El usuario ya existe como Cliente.');
-                        }
-                    })
-                    .catch((error) => {
-                        console.log('Error en el registro:', error);
-                        setRegistroError('Error en el registro. Inténtalo de nuevo, por favor.');
-                    });
+                      })
+                      .then((response) => {
+                          if (response.data.status === 'OK') {
+                              setRegistroError('El usuario se ha registrado como Cliente.');
+                          } else {
+                              setRegistroError('El usuario ya existe como Cliente.');
+                          }
+                      })
+                      .catch((error) => {
+                          console.log('Error en el registro:', error);
+                          setRegistroError('Error en el registro. Inténtalo de nuevo, por favor.');
+                      });
+                    }
+                    else setRegistroError('Todos los campos son OBLIGATORIOS. Inténtelo de nuevo.');
                 }
             }
         }
@@ -200,11 +206,11 @@ export const Registro = () => {
           <Dialog open={open} onClose={handleClose}>
             <DialogTitle>Registrarse</DialogTitle>
             <DialogContent>
-            {registroError && <p>{registroError}</p>}
+            {registroError && <h4>{registroError}</h4>}
               <DialogContentText>
                 Por favor, complete el formulario de registro.
               </DialogContentText>
-              DEBE SER MAYOR DE 18 AÑOS
+              
               <Box
                 noValidate
                 component="form"
@@ -340,6 +346,7 @@ export const Registro = () => {
                         error={f_nacError}
                         helperText={f_nacError && 'Indique su Fecha de Nacimiento, por favor.'}
                     />
+                    DEBE SER MAYOR DE 18 AÑOS
                     </div>
                 }
 
