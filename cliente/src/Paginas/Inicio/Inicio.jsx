@@ -20,10 +20,11 @@ export const Inicio = () => {
 
     return(
         <Paper>
-            <Typography>Inicia sesión AHORA en OC.IO</Typography>
             <Login/>
             <Registro/>
-
         </Paper>
     );
 };
+/*
+<Login/>
+            <Registro/>*/
