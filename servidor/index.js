@@ -227,14 +227,14 @@ app.post("/registrocliente", (req, res) => {
   const dbQuery = Cliente.query();
   dbQuery.findOne({ email: req.body.email }).then(async result => {
     if (!!result) {
-      res.status(500).json({ error: "El cliente ya está registrado" });
+      return res.status(500).json({ error: "El cliente ya está registrado" });
     }
 
     const fechaNacimiento = req.body.fechanacimiento;
     const isValidDate = moment(fechaNacimiento, 'YYYY-MM-DD', true).isValid();
 
     if (!isValidDate) {
-      res.status(400).json({ error: "Fecha de nacimiento inválida" });
+      return res.status(400).json({ error: "Fecha de nacimiento inválida" });
     }
 
     const edadMinima = 18;
@@ -242,7 +242,7 @@ app.post("/registrocliente", (req, res) => {
     const edad = fechaActual.diff(fechaNacimiento, 'years');
 
     if (edad < edadMinima) {
-      res.status(400).json({ error: "Debes ser mayor de 18 años para registrarte" });
+      return res.status(400).json({ error: "Debes ser mayor de 18 años para registrarte" });
     }
 
     dbQuery
@@ -257,13 +257,13 @@ app.post("/registrocliente", (req, res) => {
       })
       .then(insertResult => {
         if (!!insertResult) {
-          res.status(200).json({ status: "OK" });
+          return res.status(200).json({ status: "OK" });
         } else {
-          res.status(500).json({ status: "Error al registrar el cliente" });
+          return res.status(500).json({ status: "Error al registrar el cliente" });
         }
       })
       .catch(error => {
-        res.status(500).json({ status: "Error al registrar el cliente" });
+        return res.status(500).json({ status: "Error al registrar el cliente" });
       });
   });
 });
