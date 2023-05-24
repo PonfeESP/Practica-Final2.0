@@ -8,9 +8,6 @@ import axios from 'axios';
 import {AppBar, Box, Toolbar, IconButton, Typography, Menu, Container, Avatar, Button, Tooltip, MenuItem} from '@mui/material';
 import AdbIcon from '@mui/icons-material/Adb';
 import MenuIcon from '@mui/icons-material/Menu';
-import { useNavigate } from 'react-router-dom';
-//import { redirect } from "react-router-dom";
-
 
 export const Encabezado = () => {
     // Control del Navegador (Tamaños)
@@ -19,20 +16,13 @@ export const Encabezado = () => {
     
     // Control de Usuario
     const [userData, setUserData] = useState();
-    const [logoutError, setLogoutError] = useState();
-    const [borrarCuentaError, setBorrarCuentaError] = useState();
-    setLogoutError('');
-    setBorrarCuentaError('');
-
-    // Control de Redirecciones
-    const navigate = useNavigate();
   
   useEffect(() => { // Obtener User
       axios({
           url: 'http://localhost:8080/user',
           method: 'GET',
           withCredentials: true,
-          timeout: 5000,
+          //timeout: 5000,
           //signal: AbortSignal.timeout(5000) //Aborts request after 5 seconds
       })
       .then(res => {
@@ -66,7 +56,7 @@ export const Encabezado = () => {
   }]
 
   // Evento Cerrar Sesión
-  const performLogout = (event) => {
+  /*const performLogout = (event) => {
     event.preventDefault();
     setLogoutError('');
 
@@ -74,7 +64,7 @@ export const Encabezado = () => {
         axios({
             url: 'http://localhost:8000/logout',
             method: 'POST',
-            timeout: 5000,
+            //timeout: 5000,
             //signal: AbortSignal.timeout(5000) //Aborts request after 5 seconds
         }).then((response) =>{
             if(response.data.status === 'Ok')
@@ -100,10 +90,10 @@ export const Encabezado = () => {
         axios({
             url: 'http://localhost:8000/eliminarcliente',
             method: 'DELETE',
-            timeout: 5000,
+            //timeout: 5000,
             //signal: AbortSignal.timeout(5000) //Aborts request after 5 seconds
             data:{
-                email: userData.userType// REVISAR
+                email: userData.email// REVISAR
             }
         }).then((response) =>{
             if(response.data.status === 'OK')
@@ -121,10 +111,10 @@ export const Encabezado = () => {
         axios({
             url: 'http://localhost:8000/eliminarempresa',
             method: 'DELETE',
-            timeout: 5000,
+            //timeout: 5000,
             //signal: AbortSignal.timeout(5000) //Aborts request after 5 seconds
             data:{
-                email: userData.userType
+                email: userData.email
             }
         }).then((response) =>{
             if(response.data.status === 'OK')
@@ -139,13 +129,10 @@ export const Encabezado = () => {
         })
       }
     }
-  };
+  };*/
 
   // Opción Cerrar Sesión
   const ajustes = !!userData ? ['Cerrar sesión'] : [];
-
-  // Opción Eliminar Cuenta
-  const noAdmin = (!!userData && userData.userType==='admin') ? [] : ['Eliminar cuenta'];
 
   // Responsive
   const handleOpenNavMenu = event => setAnchorElNav(event.currentTarget);
@@ -206,13 +193,7 @@ export const Encabezado = () => {
                 display: { xs: 'block', md: 'none' },
               }}
             >
-              {!!userData && pags.map((page) => (
-                <MenuItem key={userData.userType===page.type && page.title} onClick={handleCloseNavMenu}>
-                  <Typography textAlign="center">{userData.userType===page.type && page.title}</Typography>
-                </MenuItem>
-              ))}
-
-              {!userData && pags.map((page) => (
+              {pags.map((page) => (
                 <MenuItem key={page.title} onClick={handleCloseNavMenu}>
                   <Typography textAlign="center">{page.title}</Typography>
                 </MenuItem>
@@ -241,18 +222,7 @@ export const Encabezado = () => {
             OC.IO
           </Typography>
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-            {!!userData && pags.map((page) => (
-              <Button
-                key={userData.userType===page.type && page.title}
-                onClick={handleCloseNavMenu}
-                sx={{ my: 2, color: 'white', display: 'block' }}
-                href={userData.userType===page.type && page.path}
-              >
-                {userData.userType===page.type && page.title}
-              </Button>
-            ))}
-
-            {!userData && pags.map((page) => (
+            {pags.map((page) => (
               <Button
                 key={page.title}
                 onClick={handleCloseNavMenu}
@@ -288,21 +258,15 @@ export const Encabezado = () => {
               onClose={handleCloseUserMenu}
             >
               {ajustes.map((setting) => (
-                <MenuItem key={setting} onClick={performLogout}>
+                <MenuItem key={setting} onClick={handleCloseUserMenu}>
                   <Typography textAlign="center">{setting}</Typography>
                 </MenuItem>
               ))}
 
-              {noAdmin.map((nA) => (
-                <MenuItem key={nA} onClick={performDelete}>
-                  <Typography textAlign="center">{nA}</Typography>
-                </MenuItem>
-              ))}
             </Menu>
           </Box>}
         </Toolbar>
-        <Typography textAlign="center">{logoutError}</Typography>
-        <Typography textAlign="center">{borrarCuentaError}</Typography>
+        
       </Container>
     </AppBar>
   );

@@ -39,12 +39,14 @@ const Home = () => {
         <Router>
             <Routes>
                 <Route exact path="/" element={<Inicio />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/empresa" element={<Empresa />} />
-                <Route path="/cliente" element={<Cliente />} />
+                
             
             </Routes>
         </Router>
     </ThemeProvider>);
 }
 export default Home;
+/*
+<Route path="/admin" element={<Admin />} />
+                <Route path="/empresa" element={<Empresa />} />
+                <Route path="/cliente" element={<Cliente />} />*/
