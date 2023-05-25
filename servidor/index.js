@@ -443,18 +443,18 @@ app.delete("/eliminarempresa", (req, res) => {
       if (!empresa) {
         return res.status(404).json({ error: "La empresa no existe" });
       } else {
-        dbQuery
-          .deleteById(empresaId)
-          .then(contador => {
-            if (contador > 0) {
-              return res.status(200).json({ status: "OK" });
-            } else {
-              return res.status(500).json({ error: "Error al eliminar la empresa" });
-            }
+        Evento.query().where({empresa_promotora_id: empresaId}).then(results => {
+          Promise.all(results.map(async event => {
+            await Ventas.query().where({evento_id: event.id}).patch({evento_id: -1});
+            return Evento.query().findById(event.id).delete();
+          })).then(salesDeletionResults => {
+            dbQuery.deleteById(empresaId)
+            .then(deleteResults => res.status(200).json({status: "Ok"}))
+            .catch(err => {
+             debugger;
+              res.status(500).json({error: "Error al eliminar la empresa"});})
           })
-          .catch(error => {
-            return res.status(500).json({ error: "Error al eliminar la empresa" });
-          });
+        })
       }
     })
     .catch(error => {

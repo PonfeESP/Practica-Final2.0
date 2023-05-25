@@ -61,8 +61,8 @@ export const Login = () => {
                 method: 'POST',
                 withCredentials: true,
                 data: {
-                  email: email,
-                  password: password,
+                  email,
+                  password,
                 },
             })
             .then((response) => {

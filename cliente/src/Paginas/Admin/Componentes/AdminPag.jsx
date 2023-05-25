@@ -10,102 +10,13 @@ import axios from 'axios';
 // Importaciones de Material UI
 import {Box, Collapse, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Paper} from '@mui/material';
 import Button from '@mui/material/Button';
-
-// Componente de Visualización de Empresas
-export const Fila = fila => {
-    
-
-    const [verifError, setVerifError] = useState('');
-    const [elimError, setElimError] = useState('');
-
-    const navigate = useNavigate();
-
-    const performVerif = (idEmp) => {
-        //Verificar userData.userType
-        setVerifError('');
-        axios({
-            url: 'http://localhost:8000/verificarempresa',
-            method: 'PUT',
-            withCredentials: true,
-            data: {
-              id: idEmp
-            },
-        })
-        .then((response) => {
-            if (response.data.status === 'OK') {
-                setVerifError('Empresa Verificada con EXITO');
-                navigate('/admin');
-            } else {
-            setVerifError(response.data.error);
-            }
-        })
-        .catch((error) => {
-            console.log('Error en la verificación:', error);
-            setVerifError('Error en la verificación. Inténtalo de nuevo, por favor.');
-        });
-    }
-
-
-    //NO FUNCIONA
-    const performBajaEmpresa = (idEmp) => {
-        //Verificar userData.userType
-        axios({
-            url: 'http://localhost:8000/eliminarempresa',
-            method: 'DELETE',
-            withCredentials: true,
-            data: {
-              id: idEmp
-            },
-        })
-        .then((response) => {
-            if (response.data.status === 'OK') {
-                setElimError('Empresa Eliminada con EXITO');
-                navigate('/admin');
-            } else {
-            setElimError(response.data.error);
-            }
-        })
-        .catch((error) => {
-            console.log('Error en la eliminación:', error);
-            setElimError('Error en la eliminación. Inténtalo de nuevo, por favor.');
-        });
-    }
-
-    return (
-        <React.Fragment>
-            <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
-                <TableCell>
-                    <Typography>{fila.fila.nombre_empresa}</Typography>
-                </TableCell>
-                <TableCell>
-                    <Typography>{fila.fila.cif}</Typography>
-                </TableCell>
-                <TableCell>
-                    <Typography>{fila.fila.domicilio_social}</Typography>
-                </TableCell>
-                <TableCell>
-                    <Typography>{fila.fila.capital_social}</Typography>
-                </TableCell>
-                <TableCell>
-                    <Typography>{fila.fila.persona_responsable}</Typography>
-                </TableCell>
-                <TableCell>
-                    <Typography>{fila.fila.email}</Typography>
-                </TableCell>
-                <TableCell>
-                    <Typography>{fila.fila.telefono}</Typography>
-                </TableCell>
-                {fila.fila.verificada===false && <TableCell align="center"><Button onClick={() => performVerif(fila.fila.id)}>VERIFICAR</Button></TableCell>}
-                <TableCell align="center"><Button onClick={() => performBajaEmpresa(fila.fila.id)}>ELIMINAR EMPRESA</Button></TableCell>
-            </TableRow>
-            {!!verifError && <Typography>{verifError}</Typography>}
-            {!!elimError && <Typography>{elimError}</Typography>}
-        </React.Fragment>
-    );
-}
+import { Fila } from './FilaComponent';
 
 export const AdminPag = () => {
+    const navigate = useNavigate();
+
     const [userData, setUserData] = useState();
+    const [logoutError, setLogoutError] = useState();
 
     //Declaración Empresas
     const [empresas, setEmpresas] = useState([{
@@ -147,7 +58,7 @@ export const AdminPag = () => {
     }, []);
 
     const performLogout = (event) => {
-    /*event.preventDefault();
+    event.preventDefault();
     setLogoutError('');
 
     if(!!userData){
@@ -167,11 +78,11 @@ export const AdminPag = () => {
             console.log('Error en el cierre de sesión');
             setLogoutError('Error en el Cierre de Sesión. Inténtelo más tarde.');
         })
-    }*/
+    }
   };
     // PREGUNTAR INFO. DE USERDATA
     return (empresas.length > 0 && !!empresas[0].id && <div> 
-        <Button onClick={performLogout}>ELIMINAR CUENTA</Button>
+        <Button onClick={e => performLogout(e)}>CERRAR SESION</Button>
         <TableContainer component={Paper}>
             <Table aria-label="collapsible table">
                 <TableHead>

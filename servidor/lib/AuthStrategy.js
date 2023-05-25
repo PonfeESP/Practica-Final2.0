@@ -56,18 +56,18 @@ export const strategyInit = passport => {
   passport.serializeUser((user, done) => {
     const userType = user instanceof Cliente ? 'cliente' : user instanceof EmpresaPromotora ? 'empresa' : user instanceof Admin ? 'admin' : undefined
     done(null, {
-      email: user.email,
+      id: user.id,
       userType
     })
   });
 
   passport.deserializeUser((user, done) => { // REVISAR
     const dbQuery = user.userType === 'cliente'
-  ? Cliente.query().findById(user.email)
+  ? Cliente.query().findById(user.id)
   : user.userType === 'admin'
-    ? Admin.query().findById(user.email)
+    ? Admin.query().findById(user.id)
     : user.userType === 'empresa'
-      ? EmpresaPromotora.query().findById(user.email)
+      ? EmpresaPromotora.query().findById(user.id)
       : null;
 
     if (!!dbQuery){
