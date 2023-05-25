@@ -19,7 +19,7 @@ export const Encabezado = () => {
   
   useEffect(() => { // Obtener User
       axios({
-          url: 'http://localhost:8080/user',
+          url: 'http://localhost:8000/user',
           method: 'GET',
           withCredentials: true,
           //timeout: 5000,
@@ -35,17 +35,9 @@ export const Encabezado = () => {
 
   // Nombres de página - REVISAR
   const pags = !!userData ? [{
-    type: 'admin',
-    title: 'Admin',
-    path: '/admin'
-  }, {
-    type: 'empresa',
-    title: 'Empresa',
-    path: '/empresa'
-  }, {
-    type: 'cliente',
-    title: 'Cliente',
-    path: '/cliente'
+    type: userData.userType,
+    title: userData.userType,
+    path: '/'+userData.userType
   }] : [{
     title: 'Inicio',
     path: '/'

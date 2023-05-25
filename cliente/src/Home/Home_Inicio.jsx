@@ -39,7 +39,7 @@ const Home = () => {
         <Router>
             <Routes>
                 <Route exact path="/" element={<Inicio />} />
-                
+                <Route path="/admin" element={<Admin />} />
             
             </Routes>
         </Router>

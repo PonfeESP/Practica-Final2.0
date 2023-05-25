@@ -71,32 +71,42 @@ export const Registro = () => {
 
     const performRegister = (event) => {
         event.preventDefault();
-
+        //usuario
         setUserError(false);
         setPasswordError(false);
         setRegistroError('');
-    
+        //empresa
+        setCIFError(false);
+        setCapError(false);
+        setDomError(false);
+        setnEmpError(false);
+        setPersError(false);
+        //cliente
+        setDNIError(false);
+        setApellidosError(false);
+        setF_NACError(false);
+        setNombreError(false);
+
+        //usuario errores
         if (email === '') setUserError(true);
         if (password === '') setPasswordError(true);
         if (confirmPassword === '') setConfirmPasswordError(true);
         if (userType === '') setUserTypeError(true);
         if (telefono === '') setTelfError(true);
+        //empresa errores
+        if (cif === '') setCIFError(true);
+        if (capital_social === '') setCapError(true);
+        if (domicilio_social === '') setDomError(true);
+        if (nombre_empresa === '') setnEmpError(true);
+        if (persona_responsable === '') setPersError(true);
+        //cliente errores
+        if (dni === '') setDNIError(true);
+        if (nombre === '') setNombreError(true);
+        if (fechanacimiento === '') setF_NACError(true);
+        if (apellidos === '') setApellidosError(true);
 
-        if(!!email && !!password && !!confirmPassword && !!telefono &&!!userType){
+        if(!!email && !!password && !!confirmPassword && !!telefono && !!userType){
             if(userType==='empresa'){
-                setCIFError(false);
-                setCapError(false);
-                setDomError(false);
-                setnEmpError(false);
-                setPersError(false);
-                
-                
-                if (cif === '') setCIFError(true);
-                if (capital_social === '') setCapError(true);
-                if (domicilio_social === '') setDomError(true);
-                if (nombre_empresa === '') setnEmpError(true);
-                if (persona_responsable === '') setPersError(true);
-
                 if (password !== confirmPassword) setRegistroError('Las contraseñas son distintas. Pruébelo de nuevo.');
                 else{
                     if(!!cif && !!capital_social && !!domicilio_social && !!nombre_empresa && !!persona_responsable){
@@ -130,17 +140,6 @@ export const Registro = () => {
                     else setRegistroError('Todos los campos son OBLIGATORIOS. Inténtelo de nuevo.');
                 }
             }else{
-                setDNIError(false);
-                setApellidosError(false);
-                setF_NACError(false);
-                setNombreError(false);
-                
-                
-                if (dni === '') setDNIError(true);
-                if (nombre === '') setNombreError(true);
-                if (fechanacimiento === '') setF_NACError(true);
-                if (apellidos === '') setApellidosError(true);
-
                 if (password !== confirmPassword) setRegistroError('Las contraseñas son distintas. Pruébelo de nuevo.');
                 else{
                     if(!!dni && !!nombre && !!fechanacimiento && !!apellidos){
@@ -206,7 +205,7 @@ export const Registro = () => {
           <Dialog open={open} onClose={handleClose}>
             <DialogTitle>Registrarse</DialogTitle>
             <DialogContent>
-            {registroError && <h4>{registroError}</h4>}
+            
               <DialogContentText>
                 Por favor, complete el formulario de registro.
               </DialogContentText>
@@ -340,7 +339,7 @@ export const Registro = () => {
                         onChange={(e) => setFechaNac(e.target.value)}
                         margin="dense"
                         id="fechanacimiento"
-                        label="Fecha de Nacimiento"
+                        label="Fecha de Nacimiento (YYYY-MM-DD)"
                         fullWidth
                         variant="standard"
                         error={f_nacError}
@@ -397,7 +396,7 @@ export const Registro = () => {
                 error={confirmPasswordError}
                 helperText={confirmPasswordError && 'Por favor, confirme su contraseña.'}
               />
-
+            {registroError && <h4>{registroError}</h4>}
 
             </DialogContent>
             <DialogActions>
