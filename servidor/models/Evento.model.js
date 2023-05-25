@@ -21,6 +21,8 @@ export default class Evento extends Model {
       hora: { type: 'string' },
       precio_entrada: { type: 'number' },
       empresa_promotora_id: { type: 'integer' },
+      aforo_ocupado: { type: 'integer' },
+      cancelada: {type: 'boolean'}
     },
   };
 

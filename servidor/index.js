@@ -130,21 +130,21 @@ app.post("/registroadmin", async (req, res) => {
           email: req.body.email,
           unsecurePassword: String(req.body.password),
         })
-        .then(insertResultadp => {
-          if (!!insertResultadp) {
-            return res.status(200).json({ status: "OK" });
-          } else {
+          .then(insertResultadp => {
+            if (!!insertResultadp) {
+              return res.status(200).json({ status: "OK" });
+            } else {
+              return res.status(500).json({ status: "Error al registrar el administrador" });
+            }
+          })
+          .catch(error => {
             return res.status(500).json({ status: "Error al registrar el administrador" });
-          }
-        })
-        .catch(error => {
-          return res.status(500).json({ status: "Error al registrar el administrador" });
-        });
+          });
       }
     } catch (error) {
       return res.status(500).json({ status: "Error al registrar el administrador" });
     }
-    
+
   }
 });
 
@@ -198,9 +198,9 @@ app.post("/registrocliente", async (req, res) => {
     const emailExiste = resultado.cliente || resultado.admin || resultado.empresa;
 
     const fechaNacimiento = req.body.fechanacimiento;
-    const isValidDate = moment(fechaNacimiento, 'YYYY-MM-DD', true).isValid();
+    const fechaValida = moment(fechaNacimiento, 'YYYY-MM-DD', true).isValid();
 
-    if (!isValidDate) {
+    if (!fechaValida) {
       return res.status(400).json({ error: "Fecha de nacimiento inválida" });
     }
 
@@ -284,7 +284,9 @@ app.post("/registroeventos", (req, res) => {
             fecha: req.body.fecha,
             hora: req.body.hora,
             precio_entrada: req.body.precio_entrada,
-            empresa_promotora_id: req.body.empresa_promotora_id
+            empresa_promotora_id: req.body.empresa_promotora_id,
+            aforo_ocupado: 0,
+            cancelada: false
           })
           .then(insertar => {
             if (!!insertar) {
@@ -372,7 +374,7 @@ app.get('/mostrarempresas', (req, res) => {
 
 app.get('/mostrareventos', (req, res) => { //endpoint pa cliente
   const consulta = Evento.query();
-  const fechaActual = moment().format('YYYY-MM-DD'); 
+  const fechaActual = moment().format('YYYY-MM-DD');
 
   consulta.where('fecha', '>', fechaActual);
 
@@ -384,7 +386,7 @@ app.get('/mostrareventos', (req, res) => { //endpoint pa cliente
 app.get('/mostrareventos/empresa', (req, res) => { //endpoint pa empresas
   const consulta = Evento.query();
   const idempresa = req.body.id;
-  const fechaActual = moment().format('YYYY-MM-DD'); 
+  const fechaActual = moment().format('YYYY-MM-DD');
 
   consulta.where('fecha', '>', fechaActual).where('empresa_promotora_id', idempresa); //empresas pueden ver los eventos suyos ya pasados?
 
@@ -505,14 +507,14 @@ app.delete("/eliminarevento", (req, res) => {
 app.put("/modificarevento", (req, res) => {
   const dbQuery = Evento.query();
   const eventoId = req.body.id;
-  const nombremod = req.body.nombre;
+  /*const nombremod = req.body.nombre;
   const artistamod = req.body.artista;
   const ubicacionmod = req.body.ubicacion;
   const descripcionmod = req.body.descripcion;
   const aforomod = req.body.aforo;
   const fechamod = req.body.fecha;
   const horamod = req.body.hora;
-  const preciomod = req.body.precio_entrada;
+  const preciomod = req.body.precio_entrada;*/
 
   dbQuery
     .findById(eventoId)
@@ -532,14 +534,15 @@ app.put("/modificarevento", (req, res) => {
           evento
             .$query()
             .patch({
-              nombre: nombremod,
-              artista: artistamod,
-              ubicacion: ubicacionmod,
-              aforo: aforomod,
-              descripcion: descripcionmod,
-              fecha: fechamod,
-              hora: horamod,
-              precio_entrada: preciomod,
+              nombre: req.body.nombre,
+              artista: req.body.artista,
+              ubicacion: req.body.ubicacion,
+              aforo: req.body.aforo,
+              descripcion: req.body.descripcion,
+              fecha: req.body.fecha,
+              hora: req.body.hora,
+              precio_entrada: req.body.precio_entrada,
+              cancelada: req.body.cancelada,  //Recordar en el front que para cancelar llamo a este endpoint y paso solo este valor, no hay endpoint de cancelar, no tengo q hacerlo
             })
             .then(() => {
               return res.status(200).json({ status: "OK" });
@@ -589,6 +592,25 @@ app.post("/pago", async (req, res) => {
     cantidad: req.body.cantidad
   };
 
+  const fechaValida = moment(cardDetails.f_caducidad, 'MM/YYYY', true).isValid();
+
+  if (!fechaValida) {
+    return res.status(400).json({ error: "Fecha de caducidad inválida" });
+  }
+
+  const fechaActual = moment();
+  const fechaCaducidad = moment(cardDetails.f_caducidad, 'MM/YYYY');
+
+  if (fechaCaducidad.isBefore(fechaActual, 'month')) {
+    return res.status(400).json({ error: "La tarjeta ha caducado" });
+  }
+
+  const diffMonths = fechaCaducidad.diff(fechaActual, 'months');
+
+  if (diffMonths < 0) {
+    return res.status(400).json({ error: "Tarjeta caducada, denegada" });
+  }
+
   axios({
     url: 'https://pse-payments-api.ecodium.dev/payment',
     method: 'POST',
@@ -598,7 +620,7 @@ app.post("/pago", async (req, res) => {
         creditCard: {
           cardNumber: cardDetails.tarjeta,
           cvv: cardDetails.cvv,
-          expiresOn: "06/2027"
+          expiresOn: cardDetails.f_caducidad
         },
         totalAmount: 50,
       }
