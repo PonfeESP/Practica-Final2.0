@@ -40,7 +40,7 @@ const Home = () => {
             <Routes>
                 <Route exact path="/" element={<Inicio />} />
                 <Route path="/admin" element={<Admin />} />
-            
+                <Route path="/cliente" element={<Cliente />} />
             </Routes>
         </Router>
     </ThemeProvider>);
