@@ -97,9 +97,9 @@ app.post("/loginCliente", passport.authenticate('local-cliente'), (req, res) => 
 app.post("/logout", (req, res) => {
   req.logout(err => {
     if (!!err) res.status(500).json({ error: "No se ha podido cerrar sesión." });
-    delete req.user; // <-- Elimina el req.user
+    else {delete req.user; // <-- Elimina el req.user
     req.session.destroy(); // <-- Destruye la sesión
-    res.status(200).clearCookie('SessionCookie.SID', { path: "/" }).json({ status: "Ok" }); // <-- Borrar la cookie
+    res.status(200).clearCookie('SessionCookie.SID', { path: "/" }).json({ status: "Ok" });}s // <-- Borrar la cookie
   })
 });
 
@@ -412,14 +412,17 @@ app.get('/mostrarempresas', (req, res) => {
 
 
 app.get('/mostrareventos', (req, res) => { //endpoint pa cliente
-  const consulta = Evento.query();
-  const fechaActual = moment().format('YYYY-MM-DD');
+  if (!!req.isAuthenticated()) {
+    const consulta = Evento.query();
+    const fechaActual = moment().format('YYYY-MM-DD');
+  
+    consulta.where('fecha', '>', fechaActual);
+  
+    consulta
+      .then(resultado => res.status(200).json(resultado))
+      .catch(err => res.status(500).json({ error: 'Error al obtener los eventos' }));
+  } else res.status(401).json({error:"Sesión no iniciada"})
 
-  consulta.where('fecha', '>', fechaActual);
-
-  consulta
-    .then(resultado => res.status(200).json(resultado))
-    .catch(err => res.status(500).json({ error: 'Error al obtener los eventos' }));
 });
 
 app.get('/mostrareventos/empresa', (req, res) => { //endpoint pa empresas
@@ -637,6 +640,7 @@ async function actualizarAforo(Idevento, entradascompradas, res) { //No me funci
 
 
 app.post("/pago", async (req, res) => {
+  res.json(req.user);
   const cardDetails = {
     tarjeta: req.body.tarjeta_credito,
     cvv: req.body.cvv,
@@ -684,7 +688,7 @@ app.post("/pago", async (req, res) => {
           cvv: cardDetails.cvv,
           expiresOn: cardDetails.f_caducidad
         },
-        totalAmount: cardDetails.cantidad,
+        totalAmount: 50,
       }
     }
   }).then(async response => {
@@ -697,12 +701,12 @@ app.post("/pago", async (req, res) => {
     const dbQuery = Ventas.query().insert({
       id,
       evento_id: eventoId,
-      cliente_id: req.body.cliente_id,
+      cliente_id: req.user.id,
       cantidad: req.body.cantidad,
       fecha_compra: req.body.fecha_compra,
       num_entradas: entradasCompradas
     }).then(dbRes => {
-      return res.status(200).json({ status: 'OK', id }); 
+      return res.status(200).json({ status: 'OK' });
     }).catch(dbErr => {
       return res.status(500).json({ status: 'Error en la inserción en la base de datos' });
     });

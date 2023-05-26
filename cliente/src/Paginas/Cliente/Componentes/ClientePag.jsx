@@ -12,6 +12,7 @@ import {Box, Collapse, Table, TableBody, TableCell, TableContainer, TableHead, T
 import Button from '@mui/material/Button';
 
 import { Fila } from './FilaComponente';
+import { axiosConfig } from '../../../constant/axiosConfig.constant';
 
 export const ClientePag = () => {
     const navigate = useNavigate();
@@ -34,7 +35,7 @@ export const ClientePag = () => {
         aforo_ocupado: null,
         cancelada: null
     }]);
-
+/*
     useEffect(() => { // Obtener User
         axios({
             url: 'http://localhost:8000/user',
@@ -47,12 +48,14 @@ export const ClientePag = () => {
           setUserData(res.data);
         })
         .catch(err => console.log(err))
-    }, []);
+    }, []);*/
 
     useEffect(() => {
         axios({
+            ...axiosConfig,
             url: 'http://localhost:8000/mostrareventos',
             method: 'GET',
+            
         })
         .then(res => {
             setEventos(res.data);
@@ -60,7 +63,7 @@ export const ClientePag = () => {
         .catch(err => console.log(err))
     }, []);
 
-
+/*
     const performLogout = (event) => {
         event.preventDefault();
         setLogoutError('');
@@ -82,13 +85,9 @@ export const ClientePag = () => {
                 setLogoutError('Error en el Cierre de Sesión. Inténtelo más tarde.');
             })
         }
-    };
+    };*/
 
     return(eventos.length > 0 && !!eventos[0].id && <div> 
-        <Button onClick={e => performLogout(e)}>CERRAR SESION</Button>
-        <Typography>{!!userData && userData.id}</Typography>
-        <Typography>{!!userData && userData.userType}</Typography>
-        
         <TableContainer component={Paper}>
             <Table aria-label="collapsible table">
                 <TableHead>

@@ -28,7 +28,7 @@ export const Fila = fila => {
     const [caducidadError, setCadError] = useState(false);
     const [numEntError, setNumEntError] = useState(false);
 
-    // Abrir Dialog
+    // Abrir Dialogf
     const handleClickOpen = () => {
         setOpen(true);
     };
@@ -53,6 +53,7 @@ export const Fila = fila => {
     }, []);*/
 
     const performCompra = (idEvent, precio) => {
+        console.log("hola")
         setCVVError(false);
         setNumEntError(false);
         setCadError(false);
@@ -63,7 +64,7 @@ export const Fila = fila => {
         if (caducidad === '') setCadError(true);
         if (tarjeta_credito === '') setTarjetaError(true);
 
-        if(!!cvv && !!numEntradas && !!caducidad && !!tarjeta_credito && !!userData){
+        if(!!cvv && !!numEntradas && !!caducidad && !!tarjeta_credito){
             axios({
                 url: 'http://localhost:8000/pago',
                 method: 'POST',
@@ -73,9 +74,10 @@ export const Fila = fila => {
                   cvv: cvv,
                   fecha_caducidad: caducidad,
                   cantidad: numEntradas*precio,
-                  evento_id: idEvent,
+                  evento_id: Number(idEvent),
                   num_entradas: numEntradas,
-                  cliente_id: userData.id
+                  fecha_compra: '2023-05-26'
+
                 },
               })
               .then((response) => {
@@ -177,7 +179,7 @@ export const Fila = fila => {
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={handleClose}>CANCELAR</Button>
-                        <Button onClick={() => performCompra(fila.fila.id, fila.fila.precio_entrada)}>COMPRAR</Button>
+                        <Button onClick={(e) => performCompra(fila.fila.id, fila.fila.precio_entrada)}>COMPRAR</Button>
                     </DialogActions>
                 </Dialog>
                 </TableCell>

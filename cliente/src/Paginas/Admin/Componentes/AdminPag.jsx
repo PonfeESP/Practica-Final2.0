@@ -84,9 +84,6 @@ export const AdminPag = () => {
 
     // PREGUNTAR INFO. DE USERDATA
     return (empresas.length > 0 && !!empresas[0].id && <div> 
-        <Button onClick={e => performLogout(e)}>CERRAR SESION</Button>
-        <Typography>{!!userData && userData.id}</Typography>
-        <Typography>{!!userData && userData.userType}</Typography>
 
         <TableContainer component={Paper}>
             <Table aria-label="collapsible table">
