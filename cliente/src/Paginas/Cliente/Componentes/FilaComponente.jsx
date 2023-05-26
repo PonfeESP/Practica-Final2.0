@@ -11,7 +11,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 
 
-export const Fila = ({evento, userData}) => {
+export const Fila = ({evento}) => {
     
     const [open, setOpen] = useState(false);
     const [compra, setCompra] = useState('');
@@ -55,7 +55,6 @@ export const Fila = ({evento, userData}) => {
                 cantidad: Number(numEntradas * precio),
                 evento_id: Number(eventoId),
                 num_entradas: Number(numEntradas),
-                cliente_id: 19,
                 fecha_compra: "2023-05-26"
 
                 /*tarjeta_credito: "1234567890123456",
@@ -68,12 +67,8 @@ export const Fila = ({evento, userData}) => {
                 fecha_compra: "2023-05-26"*/
             }, { withCredentials: true })
             .then((response) => {
-                if (response.data.status === 'OK') {
-                    setCompra('Has realizado tu compra con éxito');
-                } else {
-                    setCompra('Lo sentimos, no se pudo realizar tu compra');
-                }
-            })
+                setCompra(response.data.id);
+              })
             .catch((error) => {
                 console.log('Error en la compra: ', error);
                 setCompra('Error en la compra. Inténtalo de nuevo más tarde.');

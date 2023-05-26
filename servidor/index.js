@@ -97,9 +97,11 @@ app.post("/loginCliente", passport.authenticate('local-cliente'), (req, res) => 
 app.post("/logout", (req, res) => {
   req.logout(err => {
     if (!!err) res.status(500).json({ error: "No se ha podido cerrar sesión." });
-    else {delete req.user; // <-- Elimina el req.user
-    req.session.destroy(); // <-- Destruye la sesión
-    res.status(200).clearCookie('SessionCookie.SID', { path: "/" }).json({ status: "Ok" });}s // <-- Borrar la cookie
+    else {
+      delete req.user; // <-- Elimina el req.user
+      req.session.destroy(); // <-- Destruye la sesión
+      res.status(200).clearCookie('SessionCookie.SID', { path: "/" }).json({ status: "Ok" });
+    } s // <-- Borrar la cookie
   })
 });
 
@@ -415,13 +417,13 @@ app.get('/mostrareventos', (req, res) => { //endpoint pa cliente
   if (!!req.isAuthenticated()) {
     const consulta = Evento.query();
     const fechaActual = moment().format('YYYY-MM-DD');
-  
+
     consulta.where('fecha', '>', fechaActual);
-  
+
     consulta
       .then(resultado => res.status(200).json(resultado))
       .catch(err => res.status(500).json({ error: 'Error al obtener los eventos' }));
-  } else res.status(401).json({error:"Sesión no iniciada"})
+  } else res.status(401).json({ error: "Sesión no iniciada" })
 
 });
 
@@ -489,16 +491,17 @@ app.delete("/eliminarempresa", (req, res) => {
       if (!empresa) {
         return res.status(404).json({ error: "La empresa no existe" });
       } else {
-        Evento.query().where({empresa_promotora_id: empresaId}).then(results => { //Promesas de Samu
+        Evento.query().where({ empresa_promotora_id: empresaId }).then(results => { //Promesas de Samu
           Promise.all(results.map(async event => {
-            await Ventas.query().where({evento_id: event.id}).patch({evento_id: -1});
+            await Ventas.query().where({ evento_id: event.id }).patch({ evento_id: -1 });
             return Evento.query().findById(event.id).delete();
           })).then(salesDeletionResults => {
             dbQuery.deleteById(empresaId)
-            .then(deleteResults => res.status(200).json({status: "Ok"}))
-            .catch(err => {
-             debugger;
-              res.status(500).json({error: "Error al eliminar la empresa"});})
+              .then(deleteResults => res.status(200).json({ status: "Ok" }))
+              .catch(err => {
+                debugger;
+                res.status(500).json({ error: "Error al eliminar la empresa" });
+              })
           })
         })
       }
@@ -529,33 +532,33 @@ app.delete("/eliminarevento", (req, res) => {
 
         if (valido > 24) {
           Ventas.query()
-          .where({ evento_id: eventoId })
-          .patch({ evento_id: -1 })
-          .then(() => {
-            dbQuery
-              .deleteById(eventoId)
-              .then(contador => {
-                if (contador > 0) {
-                  return res.status(200).json({ status: "OK" });
-                } else {
+            .where({ evento_id: eventoId })
+            .patch({ evento_id: -1 })
+            .then(() => {
+              dbQuery
+                .deleteById(eventoId)
+                .then(contador => {
+                  if (contador > 0) {
+                    return res.status(200).json({ status: "OK" });
+                  } else {
+                    return res.status(500).json({ error: "Error al eliminar el evento" });
+                  }
+                })
+                .catch(error => {
                   return res.status(500).json({ error: "Error al eliminar el evento" });
-                }
-              })
-              .catch(error => {
-                return res.status(500).json({ error: "Error al eliminar el evento" });
-              });
-          })
-          .catch(error => {
-            return res.status(500).json({ error: "Error al actualizar las ventas" });
-          });
-      } else {
-        return res.status(400).json({ error: "Quedan menos de 24H hasta el evento, no puede ser eliminado" });
+                });
+            })
+            .catch(error => {
+              return res.status(500).json({ error: "Error al actualizar las ventas" });
+            });
+        } else {
+          return res.status(400).json({ error: "Quedan menos de 24H hasta el evento, no puede ser eliminado" });
+        }
       }
-    }
-  })
-  .catch(error => {
-    return res.status(500).json({ error: "Error al buscar el evento" });
-  });
+    })
+    .catch(error => {
+      return res.status(500).json({ error: "Error al buscar el evento" });
+    });
 });
 
 
@@ -617,99 +620,100 @@ app.put("/modificarevento", (req, res) => {
 
 async function actualizarAforo(Idevento, entradascompradas, res) { //No me funciona con res.status no se pq
 
-    const evento = await Evento.query().findById(Idevento);
-    if (!evento) {
-      throw new Error("El evento no existe");
-    }
+  const evento = await Evento.query().findById(Idevento);
+  if (!evento) {
+    throw new Error("El evento no existe");
+  }
 
-    const aforoOcupado = evento.aforo_ocupado;
-    const aforoMax = evento.aforo;
-    const aforoDisponible = aforoMax - aforoOcupado;
-    if (entradascompradas > aforoDisponible) {
-      throw new Error("No hay suficientes entradas disponibles");
-    }
+  const aforoOcupado = evento.aforo_ocupado;
+  const aforoMax = evento.aforo;
+  const aforoDisponible = aforoMax - aforoOcupado;
+  if (entradascompradas > aforoDisponible) {
+    throw new Error("No hay suficientes entradas disponibles");
+  }
 
-    const nuevoAforoOcupado = aforoOcupado + entradascompradas;
+  const nuevoAforoOcupado = aforoOcupado + entradascompradas;
 
-    await Evento.query().findById(Idevento).patch({ aforo_ocupado: nuevoAforoOcupado });
-  
+  await Evento.query().findById(Idevento).patch({ aforo_ocupado: nuevoAforoOcupado });
+
 }
 
 
 app.post("/pago", async (req, res) => {
-  res.json(req.user);
-  const cardDetails = {
-    tarjeta: req.body.tarjeta_credito,
-    cvv: req.body.cvv,
-    f_caducidad: req.body.fecha_caducidad,
-    cantidad: req.body.cantidad
-  };
+  if (!!req.isAuthenticated()) {
+    const cardDetails = {
+      tarjeta: req.body.tarjeta_credito,
+      cvv: req.body.cvv,
+      f_caducidad: req.body.fecha_caducidad,
+      cantidad: req.body.cantidad
+    };
 
-  // Validar CVV
-  if (!/^\d{3}$/.test(cardDetails.cvv)) {
-    return res.status(400).json({ error: "CVV inválido. Debe ser un número de 3 dígitos" });
-  }
-
-  // Validar número de tarjeta
-  if (!/^\d{16}$/.test(cardDetails.tarjeta)) {
-    return res.status(400).json({ error: "Número de tarjeta inválido. Debe ser un numero de 16 dígitos" });
-  }
-
-  const fechaValida = moment(cardDetails.f_caducidad, 'MM/YYYY', true).isValid();
-
-  if (!fechaValida) {
-    return res.status(400).json({ error: "Fecha de caducidad inválida" });
-  }
-
-  const fechaActual = moment();
-  const fechaCaducidad = moment(cardDetails.f_caducidad, 'MM/YYYY');
-
-  if (fechaCaducidad.isBefore(fechaActual, 'month')) {
-    return res.status(400).json({ error: "La tarjeta ha caducado" });
-  }
-
-  const diffMonths = fechaCaducidad.diff(fechaActual, 'months');
-
-  if (diffMonths < 0) {
-    return res.status(400).json({ error: "Tarjeta caducada, denegada" });
-  }
-
-  axios({
-    url: 'https://pse-payments-api.ecodium.dev/payment',
-    method: 'POST',
-    data: {
-      clientId: 3,
-      paymentDetails: {
-        creditCard: {
-          cardNumber: cardDetails.tarjeta,
-          cvv: cardDetails.cvv,
-          expiresOn: cardDetails.f_caducidad
-        },
-        totalAmount: 50,
-      }
+    // Validar CVV
+    if (!/^\d{3}$/.test(cardDetails.cvv)) {
+      return res.status(400).json({ error: "CVV inválido. Debe ser un número de 3 dígitos" });
     }
-  }).then(async response => {
-    const id = response.data._id;
-    const eventoId = req.body.evento_id;
-    const entradasCompradas = req.body.num_entradas;
 
-    await actualizarAforo(eventoId, entradasCompradas, res);
+    // Validar número de tarjeta
+    if (!/^\d{16}$/.test(cardDetails.tarjeta)) {
+      return res.status(400).json({ error: "Número de tarjeta inválido. Debe ser un numero de 16 dígitos" });
+    }
 
-    const dbQuery = Ventas.query().insert({
-      id,
-      evento_id: eventoId,
-      cliente_id: req.user.id,
-      cantidad: req.body.cantidad,
-      fecha_compra: req.body.fecha_compra,
-      num_entradas: entradasCompradas
-    }).then(dbRes => {
-      return res.status(200).json({ status: 'OK' });
-    }).catch(dbErr => {
-      return res.status(500).json({ status: 'Error en la inserción en la base de datos' });
+    const fechaValida = moment(cardDetails.f_caducidad, 'MM/YYYY', true).isValid();
+
+    if (!fechaValida) {
+      return res.status(400).json({ error: "Fecha de caducidad inválida" });
+    }
+
+    const fechaActual = moment();
+    const fechaCaducidad = moment(cardDetails.f_caducidad, 'MM/YYYY');
+
+    if (fechaCaducidad.isBefore(fechaActual, 'month')) {
+      return res.status(400).json({ error: "La tarjeta ha caducado" });
+    }
+
+    const diffMonths = fechaCaducidad.diff(fechaActual, 'months');
+
+    if (diffMonths < 0) {
+      return res.status(400).json({ error: "Tarjeta caducada, denegada" });
+    }
+
+    axios({
+      url: 'https://pse-payments-api.ecodium.dev/payment',
+      method: 'POST',
+      data: {
+        clientId: 3,
+        paymentDetails: {
+          creditCard: {
+            cardNumber: cardDetails.tarjeta,
+            cvv: cardDetails.cvv,
+            expiresOn: cardDetails.f_caducidad
+          },
+          totalAmount: 50,
+        }
+      }
+    }).then(async response => {
+      const id = response.data._id;
+      const eventoId = req.body.evento_id;
+      const entradasCompradas = req.body.num_entradas;
+
+      await actualizarAforo(eventoId, entradasCompradas, res);
+
+      const dbQuery = Ventas.query().insert({
+        id,
+        evento_id: eventoId,
+        cliente_id: req.user.id,
+        cantidad: req.body.cantidad,
+        fecha_compra: req.body.fecha_compra,
+        num_entradas: entradasCompradas
+      }).then(dbRes => {
+        return res.status(200).json({ id, message: "Pago exitoso" });
+      }).catch(dbErr => {
+        return res.status(500).json({ status: 'Error en la inserción en la base de datos' });
+      });
+    }).catch(paymentErr => {
+      return res.status(500).json({ status: 'Error en la solicitud de pago' });
     });
-  }).catch(paymentErr => {
-    return res.status(500).json({ status: 'Error en la solicitud de pago' });
-  });
+  } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
 
