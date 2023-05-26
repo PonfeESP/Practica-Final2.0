@@ -684,7 +684,7 @@ app.post("/pago", async (req, res) => {
           cvv: cardDetails.cvv,
           expiresOn: cardDetails.f_caducidad
         },
-        totalAmount: 50,
+        totalAmount: cardDetails.cantidad,
       }
     }
   }).then(async response => {
@@ -702,7 +702,7 @@ app.post("/pago", async (req, res) => {
       fecha_compra: req.body.fecha_compra,
       num_entradas: entradasCompradas
     }).then(dbRes => {
-      return res.status(200).json({ status: 'OK' });
+      return res.status(200).json({ status: 'OK', id }); 
     }).catch(dbErr => {
       return res.status(500).json({ status: 'Error en la inserción en la base de datos' });
     });
