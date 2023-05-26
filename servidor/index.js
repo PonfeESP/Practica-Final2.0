@@ -149,8 +149,6 @@ app.post("/registroadmin", async (req, res) => {
 });
 
 
-
-
 app.post("/registroempresa", async (req, res) => {
   const dbQuery = EmpresaPromotora.query();
   if (!!req.user) {
@@ -159,28 +157,47 @@ app.post("/registroempresa", async (req, res) => {
     try {
       const resultado = await comprobarEmail(req.body.email);
       if (resultado.cliente || resultado.admin || resultado.empresa) {
-        return res.status(500).json({ error: "Este email ya esta registrado" });
+        return res.status(500).json({ error: "Este email ya está registrado" });
       } else {
-        dbQuery.insert({
-          nombre_empresa: req.body.nombre_empresa,
-          email: req.body.email,
-          unsecurePassword: String(req.body.password),
-          cif: req.body.cif,
-          domicilio_social: req.body.domicilio_social,
-          telefono: req.body.telefono,
-          persona_responsable: req.body.persona_responsable,
-          capital_social: req.body.capital_social,
-          verificada: false
-        })
-          .then(insertResult => {
-            if (!!insertResult) {
-              return res.status(200).json({ status: "OK" });
+
+        const cif = req.body.cif;
+        const cifValido = /^([ABCDEFGHJKLMNPQRSUVW])(\d{7})([0-9A-J])$/.test(cif);
+        if (!cifValido) {
+          return res.status(400).json({ error: "CIF inválido" });
+        }
+
+        dbQuery
+          .where('cif', req.body.cif)
+          .then(cifexiste => {
+            if (cifexiste.length > 0) {
+              return res.status(500).json({ error: "Este CIF ya está registrado" });
             } else {
-              return res.status(500).json({ status: "Error al registrar la empresa" });
+              dbQuery
+                .insert({
+                  nombre_empresa: req.body.nombre_empresa,
+                  email: req.body.email,
+                  unsecurePassword: String(req.body.password),
+                  cif: req.body.cif,
+                  domicilio_social: req.body.domicilio_social,
+                  telefono: req.body.telefono,
+                  persona_responsable: req.body.persona_responsable,
+                  capital_social: req.body.capital_social,
+                  verificada: false
+                })
+                .then(insertResult => {
+                  if (!!insertResult) {
+                    return res.status(200).json({ status: "OK" });
+                  } else {
+                    return res.status(500).json({ status: "Error al registrar la empresa" });
+                  }
+                })
+                .catch(error => {
+                  return res.status(500).json({ status: "Error al registrar la empresa" });
+                });
             }
           })
           .catch(error => {
-            return res.status(500).json({ status: "Error al registrar la empresa" });
+            return res.status(500).json({ status: "Error al verificar el CIF" });
           });
       }
     } catch (error) {
@@ -188,6 +205,7 @@ app.post("/registroempresa", async (req, res) => {
     }
   }
 });
+
 
 
 app.post("/registrocliente", async (req, res) => {
@@ -216,30 +234,51 @@ app.post("/registrocliente", async (req, res) => {
       return res.status(500).json({ error: "Este email ya está registrado" });
     }
 
+    const dni = req.body.dni;
+
+    const dniValido = /^[XYZ]?\d{5,8}[A-Z]$/.test(dni);
+    if (!dniValido) {
+      return res.status(400).json({ error: "DNI inválido" });
+    }
+
     dbQuery
-      .insert({
-        email: req.body.email,
-        unsecurePassword: String(req.body.password),
-        nombre: req.body.nombre,
-        apellidos: req.body.apellidos,
-        dni: req.body.dni,
-        telefono: req.body.telefono,
-        fechanacimiento: req.body.fechanacimiento,
-      })
-      .then(insertResult => {
-        if (!!insertResult) {
-          return res.status(200).json({ status: "OK" });
-        } else {
-          return res.status(500).json({ status: "Error al registrar el cliente" });
+      .where({ dni: dni })
+      .first()
+      .then(existingCliente => {
+        if (existingCliente) {
+          return res.status(400).json({ error: "Este DNI ya está registrado" });
         }
+
+        dbQuery
+          .insert({
+            email: req.body.email,
+            unsecurePassword: String(req.body.password),
+            nombre: req.body.nombre,
+            apellidos: req.body.apellidos,
+            dni: dni,
+            telefono: req.body.telefono,
+            fechanacimiento: req.body.fechanacimiento,
+          })
+          .then(insertResult => {
+            if (!!insertResult) {
+              return res.status(200).json({ status: "OK" });
+            } else {
+              return res.status(500).json({ status: "Error al registrar el cliente" });
+            }
+          })
+          .catch(error => {
+            return res.status(500).json({ status: "Error al registrar el cliente" });
+          });
       })
       .catch(error => {
-        return res.status(500).json({ status: "Error al registrar el cliente" });
+        return res.status(500).json({ status: "Error al buscar el DNI en la base de datos" });
       });
   } catch (error) {
     return res.status(500).json({ status: "Error al registrar el cliente" });
   }
 });
+
+
 
 
 
@@ -332,7 +371,7 @@ app.put("/verificarempresa", (req, res) => {
     });
 });
 
-app.get("/mensajeverificada", (req, res) => {
+app.get("/mensajeverificada", (req, res) => { //mensajito para cuando una empresa no este verificada al hacer login
   const empresaId = req.body.id;
 
   EmpresaPromotora.query()
@@ -396,7 +435,6 @@ app.get('/mostrareventos/empresa', (req, res) => { //endpoint pa empresas
 });
 
 
-// NECESITO QUE ME CAMBIES EL ID POR EL EMAIL, QUE ES LA INFORMACIÓN QUE TENGO DEL USUARIO APARTE DE SU TIPO
 app.delete("/eliminarcliente", (req, res) => {
   const dbQuery = Cliente.query();
   const clienteId = req.body.id;
@@ -407,17 +445,27 @@ app.delete("/eliminarcliente", (req, res) => {
       if (!cliente) {
         res.status(404).json({ error: "El cliente no existe" });
       } else {
-        dbQuery
-          .deleteById(clienteId)
-          .then(contador => {
-            if (contador > 0) {
-              return res.status(200).json({ status: "OK" });
-            } else {
-              return res.status(500).json({ error: "Error al eliminar el cliente" });
-            }
+        // Eliminar las ventas asociadas al cliente
+        Ventas.query()
+          .where({ cliente_id: clienteId })
+          .delete()
+          .then(() => {
+            // Eliminar el cliente después de eliminar las ventas
+            dbQuery
+              .deleteById(clienteId)
+              .then(contador => {
+                if (contador > 0) {
+                  return res.status(200).json({ status: "OK" });
+                } else {
+                  return res.status(500).json({ error: "Error al eliminar el cliente" });
+                }
+              })
+              .catch(error => {
+                return res.status(500).json({ error: "Error al eliminar el cliente" });
+              });
           })
           .catch(error => {
-            return res.status(500).json({ error: "Error al eliminar el cliente" });
+            return res.status(500).json({ error: "Error al eliminar las ventas asociadas" });
           });
       }
     })
@@ -426,13 +474,8 @@ app.delete("/eliminarcliente", (req, res) => {
     });
 });
 
-async function modVentas(eventos) {
-  await Ventas.query()
-    .whereIn('evento_id', eventos.map(evento => evento.id))
-    .patch({ eventoId: null });
-}
 
-// LO MISMO QUE CLIENTE
+
 app.delete("/eliminarempresa", (req, res) => {
   const dbQuery = EmpresaPromotora.query();
   const empresaId = req.body.id;
@@ -443,7 +486,7 @@ app.delete("/eliminarempresa", (req, res) => {
       if (!empresa) {
         return res.status(404).json({ error: "La empresa no existe" });
       } else {
-        Evento.query().where({empresa_promotora_id: empresaId}).then(results => {
+        Evento.query().where({empresa_promotora_id: empresaId}).then(results => { //Promesas de Samu
           Promise.all(results.map(async event => {
             await Ventas.query().where({evento_id: event.id}).patch({evento_id: -1});
             return Evento.query().findById(event.id).delete();
@@ -482,27 +525,36 @@ app.delete("/eliminarevento", (req, res) => {
         const valido = (tiempoEvento - tiempoActual) / (1000 * 60 * 60);
 
         if (valido > 24) {
-          dbQuery
-            .deleteById(eventoId)
-            .then(contador => {
-              if (contador > 0) {
-                return res.status(200).json({ status: "OK" });
-              } else {
+          Ventas.query()
+          .where({ evento_id: eventoId })
+          .patch({ evento_id: -1 })
+          .then(() => {
+            dbQuery
+              .deleteById(eventoId)
+              .then(contador => {
+                if (contador > 0) {
+                  return res.status(200).json({ status: "OK" });
+                } else {
+                  return res.status(500).json({ error: "Error al eliminar el evento" });
+                }
+              })
+              .catch(error => {
                 return res.status(500).json({ error: "Error al eliminar el evento" });
-              }
-            })
-            .catch(error => {
-              return res.status(500).json({ error: "Error al eliminar el evento" });
-            });
-        } else {
-          return res.status(400).json({ error: "Quedan menos de 24H hasta el evento, no puede ser eliminado" });
-        }
+              });
+          })
+          .catch(error => {
+            return res.status(500).json({ error: "Error al actualizar las ventas" });
+          });
+      } else {
+        return res.status(400).json({ error: "Quedan menos de 24H hasta el evento, no puede ser eliminado" });
       }
-    })
-    .catch(error => {
-      return res.status(500).json({ error: "Error al buscar el evento" });
-    });
+    }
+  })
+  .catch(error => {
+    return res.status(500).json({ error: "Error al buscar el evento" });
+  });
 });
+
 
 app.put("/modificarevento", (req, res) => {
   const dbQuery = Evento.query();
@@ -592,6 +644,16 @@ app.post("/pago", async (req, res) => {
     cantidad: req.body.cantidad
   };
 
+  // Validar CVV
+  if (!/^\d{3}$/.test(cardDetails.cvv)) {
+    return res.status(400).json({ error: "CVV inválido. Debe ser un número de 3 dígitos" });
+  }
+
+  // Validar número de tarjeta
+  if (!/^\d{16}$/.test(cardDetails.tarjeta)) {
+    return res.status(400).json({ error: "Número de tarjeta inválido. Debe ser un numero de 16 dígitos" });
+  }
+
   const fechaValida = moment(cardDetails.f_caducidad, 'MM/YYYY', true).isValid();
 
   if (!fechaValida) {
@@ -630,7 +692,6 @@ app.post("/pago", async (req, res) => {
     const eventoId = req.body.evento_id;
     const entradasCompradas = req.body.num_entradas;
 
-    // Actualizar el aforo del evento
     await actualizarAforo(eventoId, entradasCompradas, res);
 
     const dbQuery = Ventas.query().insert({
@@ -649,6 +710,7 @@ app.post("/pago", async (req, res) => {
     return res.status(500).json({ status: 'Error en la solicitud de pago' });
   });
 });
+
 
 
 
