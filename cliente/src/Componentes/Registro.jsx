@@ -118,7 +118,7 @@ export const Registro = () => {
                           email: email,
                           password: password,
                           cif: cif,
-                          capital_social: capital_social,
+                          capital_social: parseInt(capital_social),
                           domicilio_social: domicilio_social,
                           nombre_empresa: nombre_empresa,
                           persona_responsable: persona_responsable,
