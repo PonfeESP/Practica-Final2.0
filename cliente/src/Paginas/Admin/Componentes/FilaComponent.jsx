@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 import React from 'react';
 import { TableCell, TableRow, Typography, Button } from "@mui/material";
+import { axiosConfig } from "../../../constant/axiosConfig.constant";
 // Componente de Visual,ización de Empresas
 export const Fila = fila => {
     
@@ -42,9 +43,9 @@ export const Fila = fila => {
     const performBajaEmpresa = (idEmp) => {
         //Verificar userData.userType
         axios({
+            ...axiosConfig,
             url: 'http://localhost:8000/eliminarempresa',
             method: 'DELETE',
-            withCredentials: true,
             data: {
               id: idEmp
             },

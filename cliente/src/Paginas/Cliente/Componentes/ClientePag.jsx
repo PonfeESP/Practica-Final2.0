@@ -12,6 +12,7 @@ import { Box, Collapse, Table, TableBody, TableCell, TableContainer, TableHead, 
 import Button from '@mui/material/Button';
 
 import { Fila } from './FilaComponente';
+import { axiosConfig } from '../../../constant/axiosConfig.constant';
 
 export const ClientePag = () => {
     const navigate = useNavigate();
@@ -34,7 +35,7 @@ export const ClientePag = () => {
         aforo_ocupado: null,
         cancelada: null
     }]);
-
+/*
     useEffect(() => { // Obtener User
         axios({
             url: 'http://localhost:8000/user',
@@ -43,23 +44,25 @@ export const ClientePag = () => {
             //timeout: 5000,
             //signal: AbortSignal.timeout(5000) //Aborts request after 5 seconds
         })
-            .then(res => {
-                setUserData(res.data);
-            })
-            .catch(err => console.log(err))
-    }, []);
+        .then(res => {
+          setUserData(res.data);
+        })
+        .catch(err => console.log(err))
+    }, []);*/
 
     useEffect(() => {
         axios({
+            ...axiosConfig,
             url: 'http://localhost:8000/mostrareventos',
             method: 'GET',
+            
         })
             .then(res => {
                 setEventos(res.data);
             })
             .catch(err => console.log(err))
     }, []);
-
+/*
 
     const performLogout = (event) => {
         event.preventDefault();
@@ -82,13 +85,9 @@ export const ClientePag = () => {
                     setLogoutError('Error en el Cierre de Sesión. Inténtelo más tarde.');
                 })
         }
-    };
+    };*/
 
-    return (eventos.length > 0 && !!eventos[0].id && <div>
-        <Button onClick={e => performLogout(e)}>CERRAR SESION</Button>
-        <Typography>{!!userData && userData.id}</Typography>
-        <Typography>{!!userData && userData.userType}</Typography>
-
+    return(eventos.length > 0 && !!eventos[0].id && <div> 
         <TableContainer component={Paper}>
             <Table aria-label="collapsible table">
                 <TableHead>
@@ -108,7 +107,6 @@ export const ClientePag = () => {
                         evento.aforo !== evento.aforo_ocupado && evento.cancelada === false && (
                             <Fila
                                 evento={evento}
-                                userData={userData}
                             />
                         )
                     ))}

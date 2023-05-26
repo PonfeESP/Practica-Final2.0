@@ -26,7 +26,7 @@ export const Fila = ({evento, userData}) => {
     const [caducidadError, setCaducidadError] = useState(false);
     const [numEntradasError, setNumEntradasError] = useState(false);
 
-    // Abrir Dialog
+    // Abrir Dialogf
     const handleClickOpen = () => {
         setOpen(true);
     };
