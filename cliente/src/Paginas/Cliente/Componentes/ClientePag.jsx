@@ -107,15 +107,8 @@ export const ClientePag = () => {
                     {eventos.map((evento) => (
                         evento.aforo !== evento.aforo_ocupado && evento.cancelada === false && (
                             <Fila
-                                key={evento.id}
-                                nombre={evento.nombre}
-                                artista={evento.artista}
-                                ubicacion={evento.ubicacion}
-                                aforo={evento.aforo}
-                                descripcion={evento.descripcion}
-                                fecha={evento.fecha}
-                                hora={evento.hora}
-                                precio_entrada={evento.precio_entrada}
+                                evento={evento}
+                                userData={userData}
                             />
                         )
                     ))}
