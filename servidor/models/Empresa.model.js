@@ -19,7 +19,7 @@ export default class EmpresaPromotora extends Model {
       domicilio_social: { type: 'string' },
       telefono: { type: 'string' },
       persona_responsable: { type: 'string' },
-      capital_social: { type: 'string' },
+      capital_social: { type: 'integer' },
       verificada: { type: 'boolean' }
     }
   };

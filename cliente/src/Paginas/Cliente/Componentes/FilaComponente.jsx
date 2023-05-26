@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from 'axios';
 import React from 'react';
 
@@ -11,22 +11,20 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 
 
-export const Fila = fila => {
+export const Fila = ({evento, userData}) => {
     
     const [open, setOpen] = useState(false);
-
-    const [userData, setUserData] = useState();
-
     const [compra, setCompra] = useState('');
-    const [tarjeta_credito, setTarjeta] = useState('');
+
+    const [tarjetaCredito, setTarjetaCredito] = useState('');
     const [cvv, setCVV] = useState('');
     const [caducidad, setCaducidad] = useState('');
     const [numEntradas, setNumEntradas] = useState('');
 
     const [tarjetaError, setTarjetaError] = useState(false);
     const [cvvError, setCVVError] = useState(false);
-    const [caducidadError, setCadError] = useState(false);
-    const [numEntError, setNumEntError] = useState(false);
+    const [caducidadError, setCaducidadError] = useState(false);
+    const [numEntradasError, setNumEntradasError] = useState(false);
 
     // Abrir Dialog
     const handleClickOpen = () => {
@@ -37,149 +35,138 @@ export const Fila = fila => {
     const handleClose = () => {
         setOpen(false);
     };
-    /*
-    useEffect(() => { // Obtener User
-        axios({
-            url: 'http://localhost:8000/user',
-            method: 'GET',
-            withCredentials: true,
-            //timeout: 5000,
-            //signal: AbortSignal.timeout(5000) //Aborts request after 5 seconds
-        })
-        .then(res => {
-          setUserData(res.data);
-        })
-        .catch(err => console.log(err))
-    }, []);*/
 
-    const performCompra = (idEvent, precio) => {
-        setCVVError(false);
-        setNumEntError(false);
-        setCadError(false);
+    const performCompra = (eventoId, precio) => {
         setTarjetaError(false);
+        setCVVError(false);
+        setCaducidadError(false);
+        setNumEntradasError(false);
 
-        if (cvv  === '') setCVVError(true);
-        if (numEntradas  === '' || parseInt(numEntradas)<=1) setNumEntError(true);
-        if (caducidad === '') setCadError(true);
-        if (tarjeta_credito === '') setTarjetaError(true);
+        if (cvv === '') setCVVError(true);
+        if (numEntradas === '' || parseInt(numEntradas) <= 1) setNumEntradasError(true);
+        if (caducidad === '') setCaducidadError(true);
+        if (tarjetaCredito === '') setTarjetaError(true);
 
-        if(!!cvv && !!numEntradas && !!caducidad && !!tarjeta_credito && !!userData){
-            axios({
-                url: 'http://localhost:8000/pago',
-                method: 'POST',
-                withCredentials: true,
-                data: {
-                  tarjeta_credito: tarjeta_credito,
-                  cvv: cvv,
-                  fecha_caducidad: caducidad,
-                  cantidad: numEntradas*precio,
-                  evento_id: idEvent,
-                  num_entradas: numEntradas,
-                  cliente_id: userData.id
-                },
-              })
-              .then((response) => {
-                  if (response.data.status === 'OK') {
-                      setCompra('Has realizado su compra con éxito');
-                  } else {
-                      setCompra('Lo sentimos, pero no se ha podido realizar su compra');
-                  }
-              })
-              .catch((error) => {
-                  console.log('Error en la compra: ', error);
-                  setCompra('Error en la compra. Inténtelo de nuevo más tarde.');
-              });
+        if (!!cvv && !!numEntradas && !!caducidad && !!tarjetaCredito) {
+            axios.post('http://localhost:8000/pago', {
+                tarjeta_credito: tarjetaCredito,
+                cvv: cvv,
+                fecha_caducidad: caducidad,
+                cantidad: Number(numEntradas * precio),
+                evento_id: Number(eventoId),
+                num_entradas: Number(numEntradas),
+                cliente_id: 19,
+                fecha_compra: "2023-05-26"
+
+                /*tarjeta_credito: "1234567890123456",
+                cvv: "123",
+                fecha_caducidad: "05/2027",
+                cantidad: 4,
+                evento_id: 22,
+                num_entradas: 2,
+                cliente_id: 17,
+                fecha_compra: "2023-05-26"*/
+            }, { withCredentials: true })
+            .then((response) => {
+                if (response.data.status === 'OK') {
+                    setCompra('Has realizado tu compra con éxito');
+                } else {
+                    setCompra('Lo sentimos, no se pudo realizar tu compra');
+                }
+            })
+            .catch((error) => {
+                console.log('Error en la compra: ', error);
+                setCompra('Error en la compra. Inténtalo de nuevo más tarde.');
+            });
         }
-        
     }
 
     return (
         <React.Fragment>
             <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
-                
                 <TableCell>
-                    <Typography>{fila.fila.nombre}</Typography>
+                    <Typography>{evento.nombre}</Typography>
                 </TableCell>
                 <TableCell>
-                    <Typography>{fila.fila.artista}</Typography>
+                    <Typography>{evento.artista}</Typography>
                 </TableCell>
                 <TableCell>
-                    <Typography>{fila.fila.ubicacion}</Typography>
+                    <Typography>{evento.ubicacion}</Typography>
                 </TableCell>
                 <TableCell>
-                    <Typography>{fila.fila.aforo}</Typography>
+                    <Typography>{evento.aforo}</Typography>
                 </TableCell>
                 <TableCell>
-                    <Typography>{fila.fila.descripcion}</Typography>
+                    <Typography>{evento.descripcion}</Typography>
                 </TableCell>
                 <TableCell>
-                    <Typography>{fila.fila.fecha} {fila.fila.hora}</Typography>
+                    <Typography>{evento.fecha} {evento.hora}</Typography>
                 </TableCell>
                 <TableCell>
-                    <Typography>{fila.fila.precio_entrada}</Typography>
+                    <Typography>{evento.precio_entrada}</Typography>
                 </TableCell>
                 <TableCell align="center">
-                <Button align="center" onClick={handleClickOpen}>COMPRAR ENTRADAS</Button>
-                <Dialog open={open} onClose={handleClose}>
-                    <DialogTitle>COMPRAR ENTRADAS</DialogTitle>
-                    <DialogContent>
-                    <DialogContentText>
-                        Por favor, complete el siguiente formulario para realizar su compra.
-                    </DialogContentText>
-                    <TextField
-                        required
-                        onChange={(e) => setTarjeta(e.target.value)}
-                        margin="dense"
-                        id="tarjeta_credito"
-                        label="Número de Tarjeta"
-                        fullWidth
-                        variant="standard"
-                        inputProps={{ maxLength: 16 }}
-                        error={tarjetaError}
-                        helperText={tarjetaError && 'Por favor, ingrese un Número de Tarjeta Válido'}
-                    />
-                    <TextField
-                        required
-                        onChange={(e) => setCVV(e.target.value)}
-                        margin="dense"
-                        id="cvv"
-                        label="CVV de la Tarjeta"
-                        fullWidth
-                        variant="standard"
-                        inputProps={{ maxLength: 3 }}
-                        error={cvvError}
-                        helperText={cvvError && 'Por favor, ingrese un CVV Válido'}
-                    />
-                    <TextField
-                        required
-                        onChange={(e) => setCaducidad(e.target.value)}
-                        margin="dense"
-                        id="caducidad"
-                        label="Caducidad de la Tarjeta(MM/YYYY)"
-                        fullWidth
-                        variant="standard"
-                        inputProps={{ maxLength: 7 }}
-                        error={caducidadError}
-                        helperText={caducidadError && 'Por favor, ingrese una Fecha de Caducidad Válida'}
-                    />
-                    <TextField
-                        required
-                        onChange={(e) => setNumEntradas(e.target.value)}
-                        margin="dense"
-                        id="numentradas"
-                        label="Número de Entradas"
-                        fullWidth
-                        variant="standard"
-                        error={numEntError}
-                        helperText={numEntError && 'Por favor, ingrese un Número de Entradas Válido'}
-                    />
-                    {compra && <h4>{compra}</h4>}
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleClose}>CANCELAR</Button>
-                        <Button onClick={() => performCompra(fila.fila.id, fila.fila.precio_entrada)}>COMPRAR</Button>
-                    </DialogActions>
-                </Dialog>
+                    <Button align="center" onClick={handleClickOpen}>COMPRAR ENTRADAS</Button>
+                    <Dialog open={open} onClose={handleClose}>
+                        <DialogTitle>COMPRAR ENTRADAS</DialogTitle>
+                        <DialogContent>
+                            <DialogContentText>
+                                Por favor, complete el siguiente formulario para realizar su compra.
+                            </DialogContentText>
+                            <TextField
+                                required
+                                onChange={(e) => setTarjetaCredito(e.target.value)}
+                                margin="dense"
+                                id="tarjeta_credito"
+                                label="Número de Tarjeta"
+                                fullWidth
+                                variant="standard"
+                                inputProps={{ maxLength: 16 }}
+                                error={tarjetaError}
+                                helperText={tarjetaError && 'Por favor, ingrese un Número de Tarjeta válido'}
+                            />
+                            <TextField
+                                required
+                                onChange={(e) => setCVV(e.target.value)}
+                                margin="dense"
+                                id="cvv"
+                                label="CVV de la Tarjeta"
+                                fullWidth
+                                variant="standard"
+                                inputProps={{ maxLength: 3 }}
+                                error={cvvError}
+                                helperText={cvvError && 'Por favor, ingrese un CVV válido'}
+                            />
+                            <TextField
+                                required
+                                onChange={(e) => setCaducidad(e.target.value)}
+                                margin="dense"
+                                id="caducidad"
+                                label="Caducidad de la Tarjeta (MM/YYYY)"
+                                fullWidth
+                                variant="standard"
+                                inputProps={{ maxLength: 7 }}
+                                error={caducidadError}
+                                helperText={caducidadError && 'Por favor, ingrese una Fecha de Caducidad válida'}
+                            />
+                            <TextField
+                                required
+                                onChange={(e) => setNumEntradas(e.target.value)}
+                                margin="dense"
+                                id="numentradas"
+                                label="Número de Entradas"
+                                fullWidth
+                                variant="standard"
+                                error={numEntradasError}
+                                helperText={numEntradasError && 'Por favor, ingrese un Número de Entradas válido'}
+                            />
+                            {compra && <h4>{compra}</h4>}
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={handleClose}>CANCELAR</Button>
+                            <Button onClick={() => performCompra(evento.id, evento.precio_entrada)}>COMPRAR</Button>
+                        </DialogActions>
+                    </Dialog>
                 </TableCell>
             </TableRow>
         </React.Fragment>

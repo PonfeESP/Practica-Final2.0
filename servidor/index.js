@@ -613,7 +613,7 @@ app.put("/modificarevento", (req, res) => {
 });
 
 async function actualizarAforo(Idevento, entradascompradas, res) { //No me funciona con res.status no se pq
-  try {
+
     const evento = await Evento.query().findById(Idevento);
     if (!evento) {
       throw new Error("El evento no existe");
@@ -629,10 +629,7 @@ async function actualizarAforo(Idevento, entradascompradas, res) { //No me funci
     const nuevoAforoOcupado = aforoOcupado + entradascompradas;
 
     await Evento.query().findById(Idevento).patch({ aforo_ocupado: nuevoAforoOcupado });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-    throw new Error("Error al modificar el aforo del evento: " + error.message);
-  }
+  
 }
 
 
@@ -684,7 +681,7 @@ app.post("/pago", async (req, res) => {
           cvv: cardDetails.cvv,
           expiresOn: cardDetails.f_caducidad
         },
-        totalAmount: cardDetails.cantidad,
+        totalAmount: 50,
       }
     }
   }).then(async response => {
