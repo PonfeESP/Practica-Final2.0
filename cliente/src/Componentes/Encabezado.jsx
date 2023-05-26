@@ -48,29 +48,7 @@ export const Encabezado = () => {
   }]
 
   // Evento Cerrar Sesión
-  /*const performLogout = (event) => {
-    event.preventDefault();
-    setLogoutError('');
-
-    if(!!userData){
-        axios({
-            url: 'http://localhost:8000/logout',
-            method: 'POST',
-            //timeout: 5000,
-            //signal: AbortSignal.timeout(5000) //Aborts request after 5 seconds
-        }).then((response) =>{
-            if(response.data.status === 'Ok')
-                //return redirect("/");
-                navigate('/'); // Navega a la página de Inicio
-            else
-                setLogoutError(response.data.error);
-        })
-        .catch((error) => {
-            console.log('Error en el cierre de sesión');
-            setLogoutError('Error en el Cierre de Sesión. Inténtelo más tarde.');
-        })
-    }
-  };
+  /*
 
   // Evento Eliminar Cuenta
   const performDelete = (event) => {
