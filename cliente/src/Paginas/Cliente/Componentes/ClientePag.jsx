@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 // Importaciones de Material UI
-import {Box, Collapse, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Paper} from '@mui/material';
+import { Box, Collapse, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Paper } from '@mui/material';
 import Button from '@mui/material/Button';
 
 import { Fila } from './FilaComponente';
@@ -29,7 +29,7 @@ export const ClientePag = () => {
         aforo: null,
         descripcion: null,
         fecha: null,
-        hora:null,
+        hora: null,
         precio_entrada: null,
         empresa_promotora_id: null,
         aforo_ocupado: null,
@@ -57,33 +57,33 @@ export const ClientePag = () => {
             method: 'GET',
             
         })
-        .then(res => {
-            setEventos(res.data);
-        })
-        .catch(err => console.log(err))
+            .then(res => {
+                setEventos(res.data);
+            })
+            .catch(err => console.log(err))
     }, []);
-
 /*
+
     const performLogout = (event) => {
         event.preventDefault();
         setLogoutError('');
-    
-        if(!!userData){
+
+        if (!!userData) {
             axios({
                 url: 'http://localhost:8000/logout',
                 method: 'POST',
                 //timeout: 5000,
                 //signal: AbortSignal.timeout(5000) //Aborts request after 5 seconds
-            }).then((response) =>{
-                if(response.data.status === 'Ok')
+            }).then((response) => {
+                if (response.data.status === 'Ok')
                     navigate('/'); // Navega a la página de Inicio
                 else
                     setLogoutError(response.data.error);
             })
-            .catch((error) => {
-                console.log('Error en el cierre de sesión');
-                setLogoutError('Error en el Cierre de Sesión. Inténtelo más tarde.');
-            })
+                .catch((error) => {
+                    console.log('Error en el cierre de sesión');
+                    setLogoutError('Error en el Cierre de Sesión. Inténtelo más tarde.');
+                })
         }
     };*/
 
@@ -92,24 +92,28 @@ export const ClientePag = () => {
             <Table aria-label="collapsible table">
                 <TableHead>
                     <TableRow>
-                        <TableCell><Typography sx={{fontWeight: 'bold'}}>NOMBRE EVENTO</Typography></TableCell>
-                        <TableCell><Typography sx={{fontWeight: 'bold'}}>ARTISTA</Typography></TableCell>
-                        <TableCell><Typography sx={{fontWeight: 'bold'}}>UBICACIÓN</Typography></TableCell>
-                        <TableCell><Typography sx={{fontWeight: 'bold'}}>AFORO</Typography></TableCell>
-                        <TableCell><Typography sx={{fontWeight: 'bold'}}>DESCRIPCIÓN</Typography></TableCell>
-                        <TableCell><Typography sx={{fontWeight: 'bold'}}>FECHA Y HORA</Typography></TableCell>
-                        <TableCell><Typography sx={{fontWeight: 'bold'}}>PRECIO/ENTRADA</Typography></TableCell>
-                        <TableCell><Typography sx={{fontWeight: 'bold'}}>¿QUIERE COMPRAR?</Typography></TableCell>
+                        <TableCell><Typography sx={{ fontWeight: 'bold' }}>NOMBRE EVENTO</Typography></TableCell>
+                        <TableCell><Typography sx={{ fontWeight: 'bold' }}>ARTISTA</Typography></TableCell>
+                        <TableCell><Typography sx={{ fontWeight: 'bold' }}>UBICACIÓN</Typography></TableCell>
+                        <TableCell><Typography sx={{ fontWeight: 'bold' }}>AFORO</Typography></TableCell>
+                        <TableCell><Typography sx={{ fontWeight: 'bold' }}>DESCRIPCIÓN</Typography></TableCell>
+                        <TableCell><Typography sx={{ fontWeight: 'bold' }}>FECHA Y HORA</Typography></TableCell>
+                        <TableCell><Typography sx={{ fontWeight: 'bold' }}>PRECIO/ENTRADA</Typography></TableCell>
+                        <TableCell><Typography sx={{ fontWeight: 'bold' }}>¿QUIERE COMPRAR?</Typography></TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
                     {eventos.map((evento) => (
-                        evento.aforo!==evento.aforo_ocupado && evento.cancelada===false && <Fila fila={evento} />
+                        evento.aforo !== evento.aforo_ocupado && evento.cancelada === false && (
+                            <Fila
+                                evento={evento}
+                            />
+                        )
                     ))}
                 </TableBody>
             </Table>
         </TableContainer>
-        </div>
+    </div>
     );
 }
 
