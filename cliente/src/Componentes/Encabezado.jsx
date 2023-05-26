@@ -16,7 +16,7 @@ export const Encabezado = () => {
     
     // Control de Usuario
     const [userData, setUserData] = useState();
-  
+  /*
   useEffect(() => { // Obtener User
       axios({
           url: 'http://localhost:8000/user',
@@ -29,7 +29,7 @@ export const Encabezado = () => {
         setUserData(res.data);
       })
       .catch(err => console.log(err))
-  }, []);
+  }, []);*/
 
   
 
