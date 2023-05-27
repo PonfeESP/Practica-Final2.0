@@ -422,17 +422,17 @@ app.get('/mostrarempresas', (req, res) => {
 
 
 app.get('/mostrareventos', (req, res) => { //endpoint pa cliente
-  if (!!req.isAuthenticated()) {
+  
     const consulta = Evento.query();
     const fechaActual = moment().format('YYYY-MM-DD');
 
     consulta.where('fecha', '>', fechaActual);
+    consulta.where('cancelada', false);
 
     consulta
       .then(resultado => res.status(200).json(resultado))
       .catch(err => res.status(500).json({ error: 'Error al obtener los eventos' }));
-  } else res.status(401).json({ error: "Sesión no iniciada" })
-
+  
 });
 
 app.get('/mostrareventos/empresa', (req, res) => { //endpoint pa empresas
