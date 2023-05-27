@@ -101,7 +101,7 @@ app.post("/logout", (req, res) => {
       delete req.user; // <-- Elimina el req.user
       req.session.destroy(); // <-- Destruye la sesión
       res.status(200).clearCookie('SessionCookie.SID', { path: "/" }).json({ status: "Ok" });
-    } s // <-- Borrar la cookie
+    } 
   })
 });
 

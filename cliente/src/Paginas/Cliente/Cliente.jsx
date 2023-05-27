@@ -12,6 +12,7 @@ import Button from '@mui/material/Button';
 
 // Importaciones de Componentes
 import {ClientePag} from './Componentes/ClientePag';
+import { axiosConfig } from '../../constant/axiosConfig.constant';
 
 export const Cliente = () => {
   const [userData, setUserData] = useState();
@@ -43,6 +44,7 @@ export const Cliente = () => {
 
     if(!!userData){
         axios({
+          ...axiosConfig,
             url: 'http://localhost:8000/logout',
             method: 'POST',
             //timeout: 5000,
