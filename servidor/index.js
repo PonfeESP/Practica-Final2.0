@@ -580,7 +580,6 @@ app.delete("/eliminarevento", (req, res) => {
 
 app.put("/modificarevento", (req, res) => {
   if (!!req.isAuthenticated()) {
-  console.log(req.body)
   const dbQuery = Evento.query();
   const eventoId = req.body.id;
   /*const nombremod = req.body.nombre;
