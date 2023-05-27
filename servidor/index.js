@@ -388,9 +388,9 @@ app.get("/mensajeverificada", (req, res) => { //mensajito para cuando una empres
       if (empresa) {
         const verificada = empresa.verificada;
         if (verificada) {
-          res.status(200).json({ mensaje: "La empresa está verificada" });
+          res.status(200).json({ mensaje: "VERIFICADA" });
         } else {
-          res.status(200).json({ mensaje: "La empresa no está verificada" });
+          res.status(200).json({ mensaje: "NO VERIFICADA" });
         }
       } else {
         res.status(404).json({ error: "La empresa no existe" });
