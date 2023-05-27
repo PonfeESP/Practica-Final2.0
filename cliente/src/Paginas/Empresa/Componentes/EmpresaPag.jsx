@@ -47,7 +47,7 @@ export const EmpresaPag = () => {
     }, []);
 
 
-    return(eventos.length > 0 && !!eventos[0].id && <div> 
+    return(eventos.length > 0 && !!eventos[0].id ? <div> 
         <TableContainer component={Paper}>
             <Table aria-label="collapsible table">
                 <TableHead>
@@ -73,7 +73,7 @@ export const EmpresaPag = () => {
                 </TableBody>
             </Table>
         </TableContainer>
-    </div>
+    </div> : <Typography sx={{ fontWeight: 'bold' }}>NO TIENES NINGÚN EVENTO. CREA UNO!</Typography>
     );
 }
 

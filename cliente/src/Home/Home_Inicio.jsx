@@ -41,6 +41,7 @@ const Home = () => {
                 <Route exact path="/" element={<Inicio />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/cliente" element={<Cliente />} />
+                <Route path="/empresa" element={<Empresa />}/>
             </Routes>
         </Router>
     </ThemeProvider>);

@@ -47,7 +47,7 @@ export const ClientePag = () => {
     }, []);
 
 
-    return(eventos.length > 0 && !!eventos[0].id && <div> 
+    return(eventos.length > 0 && !!eventos[0].id ? <div> 
         <TableContainer component={Paper}>
             <Table aria-label="collapsible table">
                 <TableHead>
@@ -74,7 +74,7 @@ export const ClientePag = () => {
                 </TableBody>
             </Table>
         </TableContainer>
-    </div>
+    </div> : <Typography sx={{ fontWeight: 'bold' }}>MO HAY EVENTOS DISPONIBLES ACTUALMENTE</Typography>
     );
 }
 

@@ -6,8 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 // Importaciones de Material UI
-import { Paper, Typography } from '@mui/material';
-import Button from '@mui/material/Button';
+import { Paper, Typography, Button, Alert, Snackbar } from '@mui/material';
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -24,6 +23,8 @@ import { axiosConfig } from '../../constant/axiosConfig.constant.js';
 export const Empresa = () => {
   const [userData, setUserData] = useState();
   const [logoutError, setLogoutError] = useState();
+  const [finishLoading, setFinishLoading] = useState(null);
+
 
   const [nombre, setNombre] = useState();
   const [artista, setArtista] = useState();
@@ -49,36 +50,20 @@ export const Empresa = () => {
 
   const navigate = useNavigate();
 
-    useEffect(() => {
-      document.title = "OC.IO - EMPRESA";
-    }, []);
-  
-    useEffect(() => { // Obtener User
-      axios({
-          ...axiosConfig,
-          url: 'http://localhost:8000/user',
-          method: 'GET'          
+  useEffect(() => { // Obtener User
+
+    document.title = "OC.IO - ADMIN";
+    axios({
+        ...axiosConfig,
+        url: 'http://localhost:8000/user',
+        method: 'GET'          
+    })
+    .then(res => {
+      setUserData(res.data);
+      setFinishLoading(!!res.data && !!res.data.userType && res.data.userType === 'empresa');
       })
-      .then(res => {
-        setUserData(res.data);
-          if(!!userData && !!userData.userType){
-            if(userData.userType!=='empresa'){
-              if(userData.userType === 'cliente')
-                navigate('/cliente');
-              else{
-                if(userData.userType === 'admin')
-                  navigate('/admin');
-                else
-                  navigate('/');
-              }
-            }
-          }
-          else{
-            navigate('/');
-          }
-        })
-        .catch(err => console.log(err))
-    }, []);
+      .catch(err => console.log(err))
+  }, []);
 
   const performLogout = (event) => {
     event.preventDefault();
@@ -168,13 +153,14 @@ export const Empresa = () => {
 
 
     //AÑADIR VERIFICADA O NO
-    return (
+    return (!!finishLoading ?
       <div>
         <Paper>
           <Typography variant="h4" color="primary">EMPRESA PROMOTORA</Typography>
           <Button onClick={e => performLogout(e)}>CERRAR SESION</Button>
           <Typography>{!!userData && userData.id}</Typography>
           <Typography>{!!userData && userData.userType}</Typography>
+          {!!logoutError && <Typography>{logoutError}</Typography>}
           
           <Button onClick={handleClickOpen}>CREAR EVENTO</Button>
           <Dialog open={open} onClose={handleClose}>
@@ -281,7 +267,13 @@ export const Empresa = () => {
             
           <EmpresaPag />
         </Paper>
-      </div>
+      </div> :
+      <Snackbar
+      open={!finishLoading}
+      autoHideDuration={2000}
+      anchorOrigin={{vertical: 'top', horizontal: 'center'}}
+      onClose={() => !!userData ? userData.userType === 'admin' ? navigate('/admin') : userData.userType === 'cliente' ? navigate('/cliente') : navigate('/') : navigate('/')}>
+      <Alert severity="error">No tienes permiso para acceder a esta página</Alert></Snackbar>
     );
   };
   

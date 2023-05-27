@@ -64,14 +64,17 @@ export const Admin = () => {
           <Button onClick={e => performLogout(e)}>CERRAR SESION</Button>
           <Typography>{!!userData && userData.id}</Typography>
           <Typography>{!!userData && userData.userType}</Typography>
+          {!!logoutError && <Typography>{logoutError}</Typography>}
+
           <AdminPag />
         </Paper>
-      </div> :       <Snackbar
+      </div> :       
+      <Snackbar
       open={!finishLoading}
-      autoHideDuration={1000}
+      autoHideDuration={2000}
       anchorOrigin={{vertical: 'top', horizontal: 'center'}}
-      onClose={() => !!userData ? userData.userType === 'empresa' ? navigate('/empresa') : userData.userType === 'cliente' ? navigate('/cliente') : navigate('/') : navigate('/')}
-    ><Alert severity="error">No tienes permiso para acceder a esta página</Alert></Snackbar>
+      onClose={() => !!userData ? userData.userType === 'empresa' ? navigate('/empresa') : userData.userType === 'cliente' ? navigate('/cliente') : navigate('/') : navigate('/')}>
+      <Alert severity="error">No tienes permiso para acceder a esta página</Alert></Snackbar>
     );
   };
   

@@ -6,8 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 // Importaciones de Material UI
-import { Paper, Typography } from '@mui/material';
-import Button from '@mui/material/Button';
+import { Paper, Typography, Button, Alert, Snackbar } from '@mui/material';
+
 
 
 // Importaciones de Componentes
@@ -15,27 +15,26 @@ import {ClientePag} from './Componentes/ClientePag';
 import { axiosConfig } from '../../constant/axiosConfig.constant';
 
 export const Cliente = () => {
-  const [userData, setUserData] = useState();
   const [logoutError, setLogoutError] = useState();
+  const [userData, setUserData] = useState({});
+  const [finishLoading, setFinishLoading] = useState(null);
 
   const navigate = useNavigate();
 
-    useEffect(() => {
-      document.title = "OC.IO - CLIENTE";
-    }, []);
+  useEffect(() => { // Obtener User
 
-    useEffect(() => { // Obtener User
-      axios({
-          ...axiosConfig,
-          url: 'http://localhost:8000/user',
-          method: 'GET'          
+    document.title = "OC.IO - CLIENTE";
+    axios({
+        ...axiosConfig,
+        url: 'http://localhost:8000/user',
+        method: 'GET'          
+    })
+    .then(res => {
+      setUserData(res.data);
+      setFinishLoading(!!res.data && !!res.data.userType && res.data.userType === 'cliente');
       })
-      .then(res => {
-        setUserData(res.data);
-          
-        })
-        .catch(err => console.log(err))
-    }, []);
+      .catch(err => console.log(err))
+  }, []);
 
   const performLogout = (event) => {
     event.preventDefault();
@@ -59,19 +58,27 @@ export const Cliente = () => {
         })
     }
 };
-
-
   
     return (
+      !!finishLoading ?
       <div>
         <Paper>
           <Typography variant="h4" color="primary">CLIENTE</Typography>
           <Button onClick={e => performLogout(e)}>CERRAR SESION</Button>
           <Typography>{!!userData && userData.id}</Typography>
           <Typography>{!!userData && userData.userType}</Typography>
+          {!!logoutError && <Typography>{logoutError}</Typography>}
+
           <ClientePag />
         </Paper>
       </div>
+      :
+      <Snackbar
+      open={!finishLoading}
+      autoHideDuration={2000}
+      anchorOrigin={{vertical: 'top', horizontal: 'center'}}
+      onClose={() => !!userData ? userData.userType === 'empresa' ? navigate('/empresa') : userData.userType === 'admin' ? navigate('/admin') : navigate('/') : navigate('/')}>
+      <Alert severity="error">No tienes permiso para acceder a esta página</Alert></Snackbar>
     );
   };
   
