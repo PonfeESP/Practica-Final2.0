@@ -660,6 +660,8 @@ async function actualizarAforo(Idevento, entradascompradas, res) { //No me funci
 
 app.post("/pago", async (req, res) => {
   if (!!req.isAuthenticated()) {
+
+    const cifrado = req.body.data;
     const cardDetails = {
       tarjeta: req.body.tarjeta_credito,
       cvv: req.body.cvv,
