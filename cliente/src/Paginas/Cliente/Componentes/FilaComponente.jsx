@@ -25,16 +25,41 @@ export const Fila = ({evento}) => {
     const [cvvError, setCVVError] = useState(false);
     const [caducidadError, setCaducidadError] = useState(false);
     const [numEntradasError, setNumEntradasError] = useState(false);
+    const [eventoId, setEventoId] = useState(null); 
+    const [verificacionMensaje, setVerificacionMensaje] = useState(null); 
+
 
     // Abrir Dialogf
-    const handleClickOpen = () => {
+    const handleClickOpen = (id) => { 
         setOpen(true);
+        setEventoId(id); 
+        fetchData(); 
     };
     
     // Cerrar Dialog
     const handleClose = () => {
         setOpen(false);
     };
+
+    const fetchData = () => {
+        if (eventoId) {
+          axios
+            .get('http://localhost:8000/mensajeverificada', {
+              params: {
+                id: eventoId
+              },
+              withCredentials: true
+            })
+            .then(response => {
+              const data = response.data;
+              setVerificacionMensaje(data.mensaje);
+            })
+            .catch(error => {
+              console.log('Error al obtener el mensaje de verificación', error);
+            });
+        }
+      };
+      
 
     const performCompra = (eventoId, precio) => {
         setTarjetaError(false);
@@ -107,6 +132,7 @@ export const Fila = ({evento}) => {
                         <DialogContent>
                             <DialogContentText>
                                 Por favor, complete el siguiente formulario para realizar su compra.
+                                <Typography> {verificacionMensaje && ` Estado de verificación: ${verificacionMensaje}`}</Typography>
                             </DialogContentText>
                             <TextField
                                 required
