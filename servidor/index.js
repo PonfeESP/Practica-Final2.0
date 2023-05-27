@@ -379,8 +379,7 @@ app.put("/verificarempresa", (req, res) => {
 });
 
 app.get("/mensajeverificada", (req, res) => { //mensajito para cuando una empresa no este verificada al hacer login
-  if (!!req.isAuthenticated()) {
-  const empresaId = req.body.id;
+  const empresaId = req.query.id;
 
   EmpresaPromotora.query()
     .findById(empresaId)
@@ -399,7 +398,7 @@ app.get("/mensajeverificada", (req, res) => { //mensajito para cuando una empres
     .catch(err => {
       res.status(500).json({ error: "Error al obtener la información de la empresa" });
     });
-    } else res.status(401).json({ error: "Sesión no iniciada" })
+
 });
 
 
@@ -657,15 +656,26 @@ async function actualizarAforo(Idevento, entradascompradas, res) { //No me funci
 
 }
 
+import CryptoJS from 'crypto-js';
+
+const decrypt = (encryptedData, key) => {
+  const bytes = CryptoJS.AES.decrypt(encryptedData, key);
+  const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
+  return decryptedData;
+};
+
 
 app.post("/pago", async (req, res) => {
   if (!!req.isAuthenticated()) {
 
-    const cifrado = req.body.data;
+    const decryptedTarjeta = decrypt(req.body.tarjeta_credito, 'clave-secreta');
+  const decryptedCVV = decrypt(req.body.cvv, 'clave-secreta');
+  const decryptedFechaCaducidad = decrypt(req.body.fecha_caducidad, 'clave-secreta');
+
     const cardDetails = {
-      tarjeta: req.body.tarjeta_credito,
-      cvv: req.body.cvv,
-      f_caducidad: req.body.fecha_caducidad,
+      tarjeta: decryptedTarjeta,
+      cvv: decryptedCVV,
+      f_caducidad: decryptedFechaCaducidad,
       cantidad: req.body.cantidad
     };
 
@@ -709,7 +719,7 @@ app.post("/pago", async (req, res) => {
             cvv: cardDetails.cvv,
             expiresOn: cardDetails.f_caducidad
           },
-          totalAmount: 50,
+          totalAmount: cardDetails.cantidad,
         }
       }
     }).then(async response => {
