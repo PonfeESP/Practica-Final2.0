@@ -51,56 +51,66 @@ export const Fila = ({evento}) => {
 
     }
 
-    const performModificar = (idEvent, ocupado, n, art, ubi, afo, desc, fech, h, entrada) => {
+    const performModificar = (idEvent, ocupado) => {
         setAforoError(false);
         setFechaError(false);
         setHoraError(false);
-        setPrecioError(false);        
-
-        if(nombre==='') setNombre(n);
-        if(artista==='') setArtista(art);
-        if(ubicacion==='') setUbicacion(ubi);
-        if(aforo==='') setAforo(afo);
-        if(descripcion==='') setDesc(desc);
-        if(fecha==='') setFecha(fech);
-        if(hora==='') setHora(h);
-        if(precio_entrada==='') setPrecio(entrada);
-
-        if(aforo!=='' && ( !parseInt(aforo) || parseInt(aforo)<parseInt(ocupado))) setAforoError(true);
-        //if(fecha ) VALIDAR
-        //if(hora ) VALIDAR
-        if(precio_entrada!=='' && (!Number(precio_entrada) || Number(precio_entrada)<0)) setPrecioError(true);
-
-        //Añadir errores de Fecha y Hora
-        if(aforoError === false && precioError===false){
-            axios({
-                ...axiosConfig,
-                url: 'http://localhost:8000/registroeventos',
-                method: 'POST',
-                data: {
-                  nombre: nombre,
-                  artista: artista,
-                  ubicacion: ubicacion,
-                  aforo: parseInt(aforo),
-                  descripcion: descripcion,
-                  fecha: fecha,
-                  hora: hora,
-                  precio_entrada: Number(precio_entrada)
-                },
-              })
-              .then((response) => {
-                  if (response.data.status === 'OK') {
-                      setModifError('El Evento ha sido modificado con éxito. Actualiza la Página.');
-                  } else {
-                      setModifError(response.data.status);
-                  }
-              })
-              .catch((error) => {
-                  console.log('Error en la actualización del Evento:', error);
-                  setModifError('Error en la actualización del Evento.');
-              });
+        setPrecioError(false);
+      
+        let data = {
+          id: idEvent
+        };
+      
+        // Verificar y agregar campos modificados
+        if (nombre !== '') data.nombre = nombre;
+        if (artista !== '') data.artista = artista;
+        if (ubicacion !== '') data.ubicacion = ubicacion;
+        if (aforo !== '') {
+          if (parseInt(aforo) && parseInt(aforo) >= parseInt(ocupado)) {
+            data.aforo = parseInt(aforo);
+          } else {
+            setAforoError(true);
+          }
         }
-    }
+        if (descripcion !== '') data.descripcion = descripcion;
+        if (fecha !== '') {
+          // Validar fecha
+          // ...
+          data.fecha = fecha;
+        }
+        if (hora !== '') {
+          // Validar hora
+          // ...
+          data.hora = hora;
+        }
+        if (precio_entrada !== '') {
+          if (Number(precio_entrada) && Number(precio_entrada) >= 0) {
+            data.precio_entrada = Number(precio_entrada);
+          } else {
+            setPrecioError(true);
+          }
+        }
+      
+        if (aforoError === false && precioError === false) {
+          axios({
+            ...axiosConfig,
+            url: 'http://localhost:8000/modificarevento',
+            method: 'PUT',
+            data: data,
+          })
+            .then((response) => {
+              if (response.data.status === 'OK') {
+                setModifError('El Evento ha sido modificado con éxito. Actualiza la Página.');
+              } else {
+                setModifError(response.data.status);
+              }
+            })
+            .catch((error) => {
+              console.log('Error en la actualización del Evento:', error);
+              setModifError('Error en la actualización del Evento.');
+            });
+        }
+      };
 
     return (
         <React.Fragment>
@@ -213,7 +223,7 @@ export const Fila = ({evento}) => {
                             onChange={(e) => setPrecio(e.target.value)}
                             margin="dense"
                             id="aforo"
-                            label={evento.hora}
+                            label={evento.precio_entrada}
                             fullWidth
                             variant="standard"
                         />  
@@ -222,7 +232,7 @@ export const Fila = ({evento}) => {
                         </DialogContent>
                         <DialogActions>
                         <Button onClick={handleClose}>CANCELAR</Button>
-                        <Button onClick={() => performModificar(evento.id, evento.ocupado, evento.nombre, evento.artista, evento.ubicacion, evento.aforo, evento.descripcion, evento.fecha, evento.hora, evento.precio_entrada)}>MODIFICAR EVENTO</Button>
+                        <Button onClick={() => performModificar(evento.id, evento.ocupado)}>MODIFICAR EVENTO</Button>
                         </DialogActions>
                         </Dialog>
 

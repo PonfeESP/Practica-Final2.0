@@ -438,7 +438,7 @@ app.get('/mostrareventos', (req, res) => { //endpoint pa cliente
 app.get('/mostrareventos/empresa', (req, res) => { //endpoint pa empresas
   if (!!req.isAuthenticated()) {
   const consulta = Evento.query();
-  const idempresa = req.body.id;
+  const idempresa = req.user.id;
   const fechaActual = moment().format('YYYY-MM-DD');
 
   consulta.where('fecha', '>', fechaActual).where('empresa_promotora_id', idempresa); //empresas pueden ver los eventos suyos ya pasados?
@@ -580,6 +580,7 @@ app.delete("/eliminarevento", (req, res) => {
 
 app.put("/modificarevento", (req, res) => {
   if (!!req.isAuthenticated()) {
+  console.log(req.body)
   const dbQuery = Evento.query();
   const eventoId = req.body.id;
   /*const nombremod = req.body.nombre;
