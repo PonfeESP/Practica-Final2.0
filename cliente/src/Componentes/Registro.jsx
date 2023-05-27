@@ -1,6 +1,5 @@
 // Importaciones de React
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 // Importación de Axios
 import axios from 'axios';
@@ -15,16 +14,9 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import Box from '@mui/material/Box';
 import FormControl from '@mui/material/FormControl';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
-
-
-/*
-import { CinemasPage } from './../pages/Cinemas/Cinemas.page'
-import { LandingPage } from '../pages/Landing/Landing.page';
-*/
 
 export const Registro = () => {
     // Controlador de Usuario
@@ -191,13 +183,6 @@ export const Registro = () => {
 
         setUserType(event.target.value);
     };
-
-    /*
-    if (redirectToCinemas) {
-        return <LandingPage />; // Redirige a la página de cines
-    }
-
-    */
 
     return (
         <div>
@@ -400,8 +385,8 @@ export const Registro = () => {
 
             </DialogContent>
             <DialogActions>
-              <Button onClick={handleClose}>Cancelar</Button>
-              <Button onClick={performRegister}>Registrarse</Button>
+              <Button onClick={handleClose}>CANCELAR</Button>
+              <Button onClick={performRegister}>REGISTRARSE</Button>
             </DialogActions>
           </Dialog>
         </div>

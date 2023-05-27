@@ -11,6 +11,7 @@ import Button from '@mui/material/Button';
 
 // Importaciones de Componentes
 import { AdminPag } from './Componentes/AdminPag';
+import { axiosConfig } from '../../constant/axiosConfig.constant';
 
 export const Admin = () => {
   const [userData, setUserData] = useState();
@@ -24,17 +25,35 @@ export const Admin = () => {
   
     useEffect(() => { // Obtener User
       axios({
+          ...axiosConfig,
           url: 'http://localhost:8000/user',
-          method: 'GET',
-          withCredentials: true,
-          //timeout: 5000,
-          //signal: AbortSignal.timeout(5000) //Aborts request after 5 seconds
+          method: 'GET'          
       })
       .then(res => {
         setUserData(res.data);
-      })
-      .catch(err => console.log(err))
-  }, []);
+        if(userData==='Sesión no iniciada!')
+          navigate('/');
+        else{
+          if(!!userData.userType){
+            if(userData.userType!=='admin'){
+              if(userData.userType === 'cliente')
+                navigate('/cliente');
+              else{
+                if(userData.userType === 'empresa')
+                  navigate('/empresa');
+                else
+                  navigate('/');
+              }
+            }
+          }
+          else{
+            navigate('/');
+          }
+        }
+          
+        })
+        .catch(err => console.log(err))
+    }, []);
 
   const performLogout = (event) => {
     event.preventDefault();
@@ -42,11 +61,10 @@ export const Admin = () => {
 
     if(!!userData){
         axios({
+            ...axiosConfig,
             url: 'http://localhost:8000/logout',
-            method: 'POST',
-            withCredentials:true
-            //timeout: 5000,
-            //signal: AbortSignal.timeout(5000) //Aborts request after 5 seconds
+            method: 'POST'
+            
         }).then((response) =>{
             if(response.data.status === 'Ok')
                 navigate('/'); // Navega a la página de Inicio

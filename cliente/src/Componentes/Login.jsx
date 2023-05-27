@@ -13,10 +13,8 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
 import Box from '@mui/material/Box';
 import FormControl from '@mui/material/FormControl';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
@@ -67,14 +65,14 @@ export const Login = () => {
             })
             .then((response) => {
                 if (response.data.status === 'OK') {
-                navigate('/admin'); // Navega a la página de cines
+                navigate('/admin');
                 } else {
-                setRegistroError('El usuario no se encuentra registrado como Administrador.');
+                setRegistroError('El usuario introducido no se encuentra registrado como Administrador.');
                 }
             })
             .catch((error) => {
-                console.log('Error en el registro:', error);
-                setRegistroError('Error en el registro. Inténtalo de nuevo, por favor.');
+                console.log('Error en el inicio de sesión:', error);
+                setRegistroError('Error en el inicio de sesión. Inténtalo de nuevo, por favor.');
             });
           }
           else{
@@ -90,14 +88,14 @@ export const Login = () => {
                 })
                 .then((response) => {
                     if (response.data.status === 'OK') {
-                    navigate('/empresa'); // Navega a la página de cines
+                    navigate('/empresa'); 
                     } else {
-                    setRegistroError('Error en el registro. Inténtalo de nuevo, por favor.');
+                    setRegistroError('El usuario introducido no se encuentra registrado como Empresa Promotora.');
                     }
                 })
                 .catch((error) => {
-                    console.log('Error en el registro:', error);
-                    setRegistroError('Error en el registro. Inténtalo de nuevo, por favor.');
+                    console.log('Error en el inicio de sesión:', error);
+                    setRegistroError('Error en el inicio de sesión. Inténtalo de nuevo, por favor.');
                 });
             }
             else{
@@ -112,14 +110,14 @@ export const Login = () => {
                 })
                 .then((response) => {
                     if (response.data.status === 'OK') {
-                    navigate('/cliente'); // Navega a la página de cines
+                    navigate('/cliente');
                     } else {
-                    setRegistroError('Error en el registro. Inténtalo de nuevo, por favor.');
+                    setRegistroError('El usuario introducido no se encuentra registrado como Cliente.');
                     }
                 })
                 .catch((error) => {
-                    console.log('Error en el registro:', error);
-                    setRegistroError('Error en el registro. Inténtalo de nuevo, por favor.');
+                    console.log('Error en el inicio de sesión:', error);
+                    setRegistroError('Error en el inicio de sesión. Inténtalo de nuevo, por favor.');
                 });
             }
           }
@@ -208,13 +206,13 @@ export const Login = () => {
               </Select>
             </FormControl>
             </Box>
-            {/*<Typography>{userType}</Typography>*/}
+            
 
             {registroError && <p>{registroError}</p>}
             </DialogContent>
             <DialogActions>
-            <Button onClick={handleClose}>Cancelar</Button>
-            <Button onClick={performLogin}>Iniciar sesión</Button>
+            <Button onClick={handleClose}>CANCELAR</Button>
+            <Button onClick={performLogin}>INICIAR SESIÓN</Button>
             </DialogActions>
         </Dialog>
     </div>
