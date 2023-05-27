@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 import React from 'react';
@@ -6,7 +6,6 @@ import { TableCell, TableRow, Typography, Button } from "@mui/material";
 import { axiosConfig } from "../../../constant/axiosConfig.constant";
 // Componente de Visual,ización de Empresas
 export const Fila = fila => {
-    
 
     const [verifError, setVerifError] = useState('');
     const [elimError, setElimError] = useState('');
@@ -14,12 +13,12 @@ export const Fila = fila => {
     const navigate = useNavigate();
 
     const performVerif = (idEmp) => {
-        //Verificar userData.userType
+        
         setVerifError('');
         axios({
+            ...axiosConfig,
             url: 'http://localhost:8000/verificarempresa',
             method: 'PUT',
-            withCredentials: true,
             data: {
               id: idEmp
             },
@@ -39,9 +38,9 @@ export const Fila = fila => {
     }
 
 
-    //NO FUNCIONA
+   
     const performBajaEmpresa = (idEmp) => {
-        //Verificar userData.userType
+        
         axios({
             ...axiosConfig,
             url: 'http://localhost:8000/eliminarempresa',

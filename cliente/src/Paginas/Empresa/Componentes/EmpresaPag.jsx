@@ -9,13 +9,13 @@ import axios from 'axios';
 // Importaciones de Material UI
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Paper } from '@mui/material';
 
-
+// Importación de Componente
 import { Fila } from './FilaComponente';
-import { axiosConfig } from '../../../constant/axiosConfig.constant';
 
-export const ClientePag = () => {
+// Importación de Constantes
+import { axiosConfig } from '../../../constant/axiosConfig.constant.js';
+export const EmpresaPag = () => {
     
-
     //Declaración Empresas
     const [eventos, setEventos] = useState([{
         id: null,
@@ -36,14 +36,14 @@ export const ClientePag = () => {
     useEffect(() => {
         axios({
             ...axiosConfig,
-            url: 'http://localhost:8000/mostrareventos',
+            url: 'http://localhost:8000/mostrareventos/empresa',
             method: 'GET'
             
         })
-            .then(res => {
-                setEventos(res.data);
-            })
-            .catch(err => console.log(err))
+        .then(res => {
+            setEventos(res.data);
+        })
+        .catch(err => console.log(err))
     }, []);
 
 
@@ -60,7 +60,6 @@ export const ClientePag = () => {
                         <TableCell><Typography sx={{ fontWeight: 'bold' }}>FECHA Y HORA</Typography></TableCell>
                         <TableCell><Typography sx={{ fontWeight: 'bold' }}>PRECIO/ENTRADA</Typography></TableCell>
                         <TableCell><Typography sx={{ fontWeight: 'bold' }}>AFORO OCUPADO</Typography></TableCell>
-                        <TableCell><Typography sx={{ fontWeight: 'bold' }}>¿QUIERE COMPRAR?</Typography></TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -78,4 +77,4 @@ export const ClientePag = () => {
     );
 }
 
-export default ClientePag;
+export default EmpresaPag;

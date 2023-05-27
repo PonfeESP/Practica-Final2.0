@@ -21,22 +21,21 @@ export const Cliente = () => {
   const navigate = useNavigate();
 
     useEffect(() => {
-      document.title = "CLIENTE";
+      document.title = "OC.IO - CLIENTE";
     }, []);
 
     useEffect(() => { // Obtener User
       axios({
+          ...axiosConfig,
           url: 'http://localhost:8000/user',
-          method: 'GET',
-          withCredentials: true,
-          //timeout: 5000,
-          //signal: AbortSignal.timeout(5000) //Aborts request after 5 seconds
+          method: 'GET'          
       })
       .then(res => {
         setUserData(res.data);
-      })
-      .catch(err => console.log(err))
-  }, []);
+          
+        })
+        .catch(err => console.log(err))
+    }, []);
 
   const performLogout = (event) => {
     event.preventDefault();
@@ -46,9 +45,8 @@ export const Cliente = () => {
         axios({
           ...axiosConfig,
             url: 'http://localhost:8000/logout',
-            method: 'POST',
-            //timeout: 5000,
-            //signal: AbortSignal.timeout(5000) //Aborts request after 5 seconds
+            method: 'POST'
+            
         }).then((response) =>{
             if(response.data.status === 'Ok')
                 navigate('/'); // Navega a la página de Inicio
@@ -61,6 +59,8 @@ export const Cliente = () => {
         })
     }
 };
+
+
   
     return (
       <div>
