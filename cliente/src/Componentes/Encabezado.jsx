@@ -16,20 +16,7 @@ export const Encabezado = () => {
     
     // Control de Usuario
     const [userData, setUserData] = useState();
-  /*
-  useEffect(() => { // Obtener User
-      axios({
-          url: 'http://localhost:8000/user',
-          method: 'GET',
-          withCredentials: true,
-          //timeout: 5000,
-          //signal: AbortSignal.timeout(5000) //Aborts request after 5 seconds
-      })
-      .then(res => {
-        setUserData(res.data);
-      })
-      .catch(err => console.log(err))
-  }, []);*/
+  
 
   
 
@@ -134,43 +121,6 @@ export const Encabezado = () => {
             OC.IO
           </Typography>
 
-          <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
-            <IconButton
-              size="large"
-              aria-label="account of current user"
-              aria-controls="menu-appbar"
-              aria-haspopup="true"
-              onClick={handleOpenNavMenu}
-              color="inherit"
-            >
-              <MenuIcon />
-            </IconButton>
-            <Menu
-              id="menu-appbar"
-              anchorEl={anchorElNav}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'left',
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'left',
-              }}
-              open={Boolean(anchorElNav)}
-              onClose={handleCloseNavMenu}
-              sx={{
-                display: { xs: 'block', md: 'none' },
-              }}
-            >
-              {pags.map((page) => (
-                <MenuItem key={page.title} onClick={handleCloseNavMenu}>
-                  <Typography textAlign="center">{page.title}</Typography>
-                </MenuItem>
-              ))}
-            </Menu>
-          </Box>
-
 
           <AdbIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} />
           <Typography
@@ -191,50 +141,7 @@ export const Encabezado = () => {
           >
             OC.IO
           </Typography>
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-            {pags.map((page) => (
-              <Button
-                key={page.title}
-                onClick={handleCloseNavMenu}
-                sx={{ my: 2, color: 'white', display: 'block' }}
-                href={page.path}
-              >
-                {page.title}
-              </Button>
-            ))}
-          </Box>
-
-
-          {!!userData && <Box sx={{ flexGrow: 0 }}>
-            <Tooltip title="Ajustes">
-              <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
-              </IconButton>
-            </Tooltip>
-            <Menu
-              sx={{ mt: '45px' }}
-              id="menu-appbar"
-              anchorEl={anchorElUser}
-              anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              open={Boolean(anchorElUser)}
-              onClose={handleCloseUserMenu}
-            >
-              {ajustes.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                  <Typography textAlign="center">{setting}</Typography>
-                </MenuItem>
-              ))}
-
-            </Menu>
-          </Box>}
+          
         </Toolbar>
         
       </Container>

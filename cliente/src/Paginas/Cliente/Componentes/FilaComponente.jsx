@@ -42,12 +42,12 @@ export const Fila = ({evento}) => {
         setCaducidadError(false);
         setNumEntradasError(false);
 
-        if (cvv === '') setCVVError(true);
-        if (numEntradas === '' || parseInt(numEntradas) <= 1) setNumEntradasError(true);
-        if (caducidad === '') setCaducidadError(true);
-        if (tarjetaCredito === '') setTarjetaError(true);
+        if (cvv === '' || cvv.length<3) setCVVError(true);
+        if (numEntradas === '' || !parseInt(numEntradas) || parseInt(numEntradas)<= 1) setNumEntradasError(true);
+        if (caducidad === '' || caducidad.length<7) setCaducidadError(true);
+        if (tarjetaCredito === '' || tarjetaCredito.length<16) setTarjetaError(true);
 
-        if (!!cvv && !!numEntradas && !!caducidad && !!tarjetaCredito) {
+        if (cvvError===false && numEntradasError==false && caducidadError===false && tarjetaError===false) {
             axios.post('http://localhost:8000/pago', {
                 tarjeta_credito: tarjetaCredito,
                 cvv: cvv,
@@ -57,14 +57,6 @@ export const Fila = ({evento}) => {
                 num_entradas: Number(numEntradas),
                 fecha_compra: "2023-05-26"
 
-                /*tarjeta_credito: "1234567890123456",
-                cvv: "123",
-                fecha_caducidad: "05/2027",
-                cantidad: 4,
-                evento_id: 22,
-                num_entradas: 2,
-                cliente_id: 17,
-                fecha_compra: "2023-05-26"*/
             }, { withCredentials: true })
             .then((response) => {
                 setCompra(response.data.id);
@@ -99,6 +91,9 @@ export const Fila = ({evento}) => {
                 </TableCell>
                 <TableCell>
                     <Typography>{evento.precio_entrada}</Typography>
+                </TableCell>
+                <TableCell>
+                    <Typography>{evento.aforo_ocupado}</Typography>
                 </TableCell>
                 <TableCell align="center">
                     <Button align="center" onClick={handleClickOpen}>COMPRAR ENTRADAS</Button>

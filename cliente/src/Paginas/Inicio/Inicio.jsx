@@ -3,11 +3,8 @@ import {useEffect} from 'react';
 import * as React from 'react';
 
 // Importaciones de Material UI
-import HowToRegIcon from '@mui/icons-material/HowToReg';
-import LoginIcon from '@mui/icons-material/Login';
-import {Paper, Typography, AppBar, Box, Toolbar, IconButton, Menu, Container, Avatar, Button, Tooltip, MenuItem} from '@mui/material';
-import AdbIcon from '@mui/icons-material/Adb';
-import MenuIcon from '@mui/icons-material/Menu';
+import {Paper} from '@mui/material';
+
 
 // Importaciones de Componentes
 import { Login } from '../../Componentes/Login';

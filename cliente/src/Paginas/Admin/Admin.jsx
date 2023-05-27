@@ -6,24 +6,22 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 // Importaciones de Material UI
-import { Paper, Typography } from '@mui/material';
-import Button from '@mui/material/Button';
-
+import { Paper, Typography, Button, Alert, Snackbar } from '@mui/material';
 // Importaciones de Componentes
 import { AdminPag } from './Componentes/AdminPag';
 import { axiosConfig } from '../../constant/axiosConfig.constant';
 
 export const Admin = () => {
-  const [userData, setUserData] = useState();
   const [logoutError, setLogoutError] = useState();
+  const [userData, setUserData] = useState({});
+  const [finishLoading, setFinishLoading] = useState(null);
 
   const navigate = useNavigate();
 
-    useEffect(() => {
-      document.title = "ADMIN";
-    }, []);
   
     useEffect(() => { // Obtener User
+
+      document.title = "OC.IO - ADMIN";
       axios({
           ...axiosConfig,
           url: 'http://localhost:8000/user',
@@ -31,26 +29,7 @@ export const Admin = () => {
       })
       .then(res => {
         setUserData(res.data);
-        if(userData==='Sesión no iniciada!')
-          navigate('/');
-        else{
-          if(!!userData.userType){
-            if(userData.userType!=='admin'){
-              if(userData.userType === 'cliente')
-                navigate('/cliente');
-              else{
-                if(userData.userType === 'empresa')
-                  navigate('/empresa');
-                else
-                  navigate('/');
-              }
-            }
-          }
-          else{
-            navigate('/');
-          }
-        }
-          
+        setFinishLoading(!!res.data && !!res.data.userType && res.data.userType === 'admin');
         })
         .catch(err => console.log(err))
     }, []);
@@ -78,6 +57,7 @@ export const Admin = () => {
     }
 };
     return (
+      !!finishLoading ?
       <div>
         <Paper>
           <Typography variant="h4" color="primary">ADMINISTRADOR</Typography>
@@ -86,7 +66,12 @@ export const Admin = () => {
           <Typography>{!!userData && userData.userType}</Typography>
           <AdminPag />
         </Paper>
-      </div>
+      </div> :       <Snackbar
+      open={!finishLoading}
+      autoHideDuration={1000}
+      anchorOrigin={{vertical: 'top', horizontal: 'center'}}
+      onClose={() => !!userData ? userData.userType === 'empresa' ? navigate('/empresa') : userData.userType === 'cliente' ? navigate('/cliente') : navigate('/') : navigate('/')}
+    ><Alert severity="error">No tienes permiso para acceder a esta página</Alert></Snackbar>
     );
   };
   
