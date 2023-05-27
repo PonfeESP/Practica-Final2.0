@@ -211,6 +211,7 @@ app.post("/registroempresa", async (req, res) => {
 
 
 app.post("/registrocliente", async (req, res) => {
+  
   const dbQuery = Cliente.query();
   try {
     const email = req.body.email;
@@ -285,6 +286,7 @@ app.post("/registrocliente", async (req, res) => {
 
 
 app.post("/registroeventos", (req, res) => {
+  if (!!req.isAuthenticated()) {
   const dbQuery = Evento.query();
   dbQuery.findOne({ nombre: req.body.nombre }).then(async result => {
     if (!!result) {
@@ -344,11 +346,13 @@ app.post("/registroeventos", (req, res) => {
         return res.status(500).json({ status: "Error al buscar la empresa promotora" });
       });
   });
+  } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
 
 
 app.put("/verificarempresa", (req, res) => {
+  if (!!req.isAuthenticated()) {
   const empresaId = req.body.id;
 
   EmpresaPromotora.query()
@@ -371,9 +375,11 @@ app.put("/verificarempresa", (req, res) => {
     .catch(error => {
       return res.status(500).json({ error: "Error al buscar la empresa" });
     });
+    } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
 app.get("/mensajeverificada", (req, res) => { //mensajito para cuando una empresa no este verificada al hacer login
+  if (!!req.isAuthenticated()) {
   const empresaId = req.body.id;
 
   EmpresaPromotora.query()
@@ -393,10 +399,12 @@ app.get("/mensajeverificada", (req, res) => { //mensajito para cuando una empres
     .catch(err => {
       res.status(500).json({ error: "Error al obtener la información de la empresa" });
     });
+    } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
 
 app.get('/mostrarempresas', (req, res) => {
+  if (!!req.isAuthenticated()) {
   const consulta = EmpresaPromotora.query();
 
   if (!!req.body && req.body !== {}) {
@@ -409,6 +417,7 @@ app.get('/mostrarempresas', (req, res) => {
   consulta
     .then(resultado => res.status(200).json(resultado))
     .catch(err => res.status(500).json({ error: 'Error al obtener las empresas' }));
+    } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
 
@@ -428,6 +437,7 @@ app.get('/mostrareventos', (req, res) => { //endpoint pa cliente
 });
 
 app.get('/mostrareventos/empresa', (req, res) => { //endpoint pa empresas
+  if (!!req.isAuthenticated()) {
   const consulta = Evento.query();
   const idempresa = req.body.id;
   const fechaActual = moment().format('YYYY-MM-DD');
@@ -437,10 +447,12 @@ app.get('/mostrareventos/empresa', (req, res) => { //endpoint pa empresas
   consulta
     .then(resultado => res.status(200).json(resultado))
     .catch(err => res.status(500).json({ error: 'Error al obtener los eventos' }));
+    } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
 
 app.delete("/eliminarcliente", (req, res) => {
+  if (!!req.isAuthenticated()) {
   const dbQuery = Cliente.query();
   const clienteId = req.body.id;
 
@@ -477,11 +489,13 @@ app.delete("/eliminarcliente", (req, res) => {
     .catch(error => {
       return res.status(500).json({ error: "Error al buscar el cliente" });
     });
+    } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
 
 
 app.delete("/eliminarempresa", (req, res) => {
+  if (!!req.isAuthenticated()) {
   const dbQuery = EmpresaPromotora.query();
   const empresaId = req.body.id;
 
@@ -509,10 +523,12 @@ app.delete("/eliminarempresa", (req, res) => {
     .catch(error => {
       return res.status(500).json({ error: "Error al buscar la empresa" });
     });
+    } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
 
 app.delete("/eliminarevento", (req, res) => {
+  if (!!req.isAuthenticated()) {
   const dbQuery = Evento.query();
   const eventoId = req.body.id;
 
@@ -559,10 +575,12 @@ app.delete("/eliminarevento", (req, res) => {
     .catch(error => {
       return res.status(500).json({ error: "Error al buscar el evento" });
     });
+    } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
 
 app.put("/modificarevento", (req, res) => {
+  if (!!req.isAuthenticated()) {
   const dbQuery = Evento.query();
   const eventoId = req.body.id;
   /*const nombremod = req.body.nombre;
@@ -616,6 +634,7 @@ app.put("/modificarevento", (req, res) => {
     .catch(error => {
       return res.status(500).json({ error: "Error al buscar el evento" });
     });
+    } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
 async function actualizarAforo(Idevento, entradascompradas, res) { //No me funciona con res.status no se pq
