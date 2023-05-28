@@ -104,13 +104,8 @@ export const Fila = ({ evento }) => {
         if (nombre !== '') data.nombre = nombre;
         if (artista !== '') data.artista = artista;
         if (ubicacion !== '') data.ubicacion = ubicacion;
-        if (aforo !== '') {
-          if (parseInt(aforo) && parseInt(aforo) >= parseInt(ocupado)) {
-            data.aforo = parseInt(aforo);
-          } else {
-            setAforoError(true);
-          }
-        }
+        if (aforo !== '') data.aforo = aforo;
+          
         if (descripcion !== '') data.descripcion = descripcion;
         if (fecha !== '') {
           // Validar fecha
