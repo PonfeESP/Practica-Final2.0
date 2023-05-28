@@ -99,7 +99,7 @@ export const Registro = () => {
     //cliente errores
     if (dni === '' || dni.length < 9) setDNIError(true);
     if (nombre === '') setNombreError(true);
-    if (fechanacimiento === '' || dni.length < 10) setF_NACError(true);
+    if (fechanacimiento === '' || fechanacimiento.length < 10) setF_NACError(true);
     if (apellidos === '') setApellidosError(true);
 
     if (!!email && !!password && !!confirmPassword && !!telefono && !!userType) {
