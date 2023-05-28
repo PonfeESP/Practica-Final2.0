@@ -6,6 +6,7 @@ import Knex from 'knex';
 import session from 'express-session';
 import passport from 'passport';
 import axios from 'axios';
+import CryptoJS from 'crypto-js';
 
 // Control de Autenticación en Usuarios
 import { strategyInit } from './lib/AuthStrategy.js';
@@ -48,18 +49,7 @@ Admin.knex(dbConnection);
 Evento.knex(dbConnection);
 Ventas.knex(dbConnection);
 
-// Endpoint /POST - Inicio Sesión del Administrador
-/*app.post("/loginAdmin", passport.authenticate('local-administrador'), (req, res) => {
-  if (!!req.user) {
-    res.status(200).json({ status: 'OK' });
-  } else if (req.authInfo && req.authInfo.error === 'Administrador desconocido') {
-    res.status(401).json({ error: 'Administrador desconocido' });
-  } else {
-    res.status(500).json({ error: 'Sesión no iniciada' });
-  }
-});
-*/
-
+// Endpoint /POST - Inicio Sesión de Admin
 app.post("/loginAdmin", (req, res, next) => {
   passport.authenticate('local-administrador', (err, user, info) => {
     if (err) {
@@ -105,6 +95,7 @@ app.post("/logout", (req, res) => {
   })
 });
 
+// Comprobar existencia de Email
 async function comprobarEmail(email) {
   const varCliente = Cliente.query();
   const varAdmin = Admin.query();
@@ -117,7 +108,7 @@ async function comprobarEmail(email) {
   return { cliente, admin, empresa };
 }
 
-
+// Registro de Adminsitrador
 app.post("/registroadmin", async (req, res) => {
   const dbQuery = Admin.query();
   if (!!req.user) {
@@ -150,7 +141,7 @@ app.post("/registroadmin", async (req, res) => {
   }
 });
 
-
+//Registro de Empresas
 app.post("/registroempresa", async (req, res) => {
   const dbQuery = EmpresaPromotora.query();
   if (!!req.user) {
@@ -209,7 +200,7 @@ app.post("/registroempresa", async (req, res) => {
 });
 
 
-
+//Registro de Clientes
 app.post("/registrocliente", async (req, res) => {
 
   const dbQuery = Cliente.query();
@@ -282,9 +273,7 @@ app.post("/registrocliente", async (req, res) => {
 });
 
 
-
-
-
+//Creación de Eventos
 app.post("/registroeventos", (req, res) => {
   if (!!req.isAuthenticated()) {
     const dbQuery = Evento.query();
@@ -350,7 +339,7 @@ app.post("/registroeventos", (req, res) => {
 });
 
 
-
+//Administrador verifica empresas
 app.put("/verificarempresa", (req, res) => {
   if (!!req.isAuthenticated()) {
     const empresaId = req.body.id;
@@ -401,7 +390,7 @@ app.get("/mensajeverificada", (req, res) => {
 
 });
 
-
+//Administrador recibe empresas
 app.get('/mostrarempresas', (req, res) => {
   if (!!req.isAuthenticated()) {
     const consulta = EmpresaPromotora.query();
@@ -420,8 +409,8 @@ app.get('/mostrarempresas', (req, res) => {
 });
 
 
-
-app.get('/mostrareventos', (req, res) => { //endpoint cliente
+//Visualización de eventos para clientes
+app.get('/mostrareventos', (req, res) => { 
 
   const consulta = Evento.query();
   const fechaActual = moment().format('YYYY-MM-DD');
@@ -435,7 +424,8 @@ app.get('/mostrareventos', (req, res) => { //endpoint cliente
 
 });
 
-app.get('/mostrareventos/empresa', (req, res) => { //endpoint empresas
+//Visualización de eventos para empresa
+app.get('/mostrareventos/empresa', (req, res) => { 
   if (!!req.isAuthenticated()) {
     const consulta = Evento.query();
     const idempresa = req.user.id;
@@ -450,6 +440,7 @@ app.get('/mostrareventos/empresa', (req, res) => { //endpoint empresas
 });
 
 
+//Eliminar cuenta actual tipo cliente
 app.delete("/eliminarcliente", (req, res) => {
   if (!!req.isAuthenticated()) {
     const dbQuery = Cliente.query();
@@ -494,7 +485,7 @@ app.delete("/eliminarcliente", (req, res) => {
 });
 
 
-
+//Administrador elimina empresas
 app.delete("/eliminarempresa", (req, res) => {
   if (!!req.isAuthenticated()) {
     const dbQuery = EmpresaPromotora.query();
@@ -528,6 +519,7 @@ app.delete("/eliminarempresa", (req, res) => {
 });
 
 
+//Empresa elimina un evento de forma permanente
 app.delete("/eliminarevento", (req, res) => {
   if (!!req.isAuthenticated()) {
     const dbQuery = Evento.query();
@@ -579,6 +571,8 @@ app.delete("/eliminarevento", (req, res) => {
   } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
+
+//Elimina cuenta actual tipo empresa
 app.delete("/eliminarcuentaempresa", (req, res) => {
   if (!!req.isAuthenticated()) {
     const dbQuery = EmpresaPromotora.query();
@@ -617,6 +611,7 @@ app.delete("/eliminarcuentaempresa", (req, res) => {
 });
 
 
+//Empresa modifica su evento
 app.put("/modificarevento", (req, res) => {
   if (!!req.isAuthenticated()) {
   const dbQuery = Evento.query();
@@ -684,8 +679,8 @@ app.put("/modificarevento", (req, res) => {
     } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
-
-async function actualizarAforo(Idevento, entradascompradas, res) { //No me funciona con res.status no se pq
+//Comprobación de aforo
+async function actualizarAforo(Idevento, entradascompradas, res) { 
 
   const evento = await Evento.query().findById(Idevento);
   if (!evento) {
@@ -705,8 +700,8 @@ async function actualizarAforo(Idevento, entradascompradas, res) { //No me funci
 
 }
 
-import CryptoJS from 'crypto-js';
 
+//Uso de encriptación para comprar entradas - CRYPTOJS
 const decrypt = (encryptedData, key) => {
   const bytes = CryptoJS.AES.decrypt(encryptedData, key);
   const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
@@ -714,6 +709,7 @@ const decrypt = (encryptedData, key) => {
 };
 
 
+//Comprar entradas
 app.post("/pago", async (req, res) => {
   if (!!req.isAuthenticated()) {
 
@@ -797,8 +793,7 @@ app.post("/pago", async (req, res) => {
 });
 
 
-
-
+//Obtener sesión de usuario
 app.get("/user", (req, res) => !!req.isAuthenticated() ? res.status(200).send(req.session.passport.user) : res.status(401).send('Sesión no iniciada!'));
 
 
