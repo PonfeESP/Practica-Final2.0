@@ -3,7 +3,7 @@ import axios from 'axios';
 import React from 'react';
 import moment from 'moment';
 import CryptoJS from 'crypto-js';
-
+import QRCode from "react-qr-code";
 
 
 import { TableCell, TableRow, Typography, Button } from "@mui/material";
@@ -38,6 +38,7 @@ export const Fila = ({ evento }) => {
     // Abrir Dialogf
     const handleClickOpen = (id) => {
         setOpen(true);
+        setCompra(''); 
     };
 
     // Cerrar Dialog
@@ -50,24 +51,24 @@ export const Fila = ({ evento }) => {
     useEffect(() => {
         // Llamada al endpoint mensajeverificada
         axios.get('http://localhost:8000/mensajeverificada', {
-          params: { id: evento.empresa_promotora_id }
+            params: { id: evento.empresa_promotora_id }
         })
-          .then(response => {
-            const mensaje = response.data.mensaje;
-            let verificacionMensaje = "";
-            if (mensaje === "VERIFICADA") {
-              verificacionMensaje = "";
-            } else if (mensaje === "NO VERIFICADA") {
-              verificacionMensaje = "Este evento pertenece a una empresa NO VERIFICADA";
-            }
-            setVerificacionMensaje(verificacionMensaje);
-          })
-          .catch(error => {
-            console.log(error);
-          });
-      }, []);
-      
-      
+            .then(response => {
+                const mensaje = response.data.mensaje;
+                let verificacionMensaje = "";
+                if (mensaje === "VERIFICADA") {
+                    verificacionMensaje = "";
+                } else if (mensaje === "NO VERIFICADA") {
+                    verificacionMensaje = "Este evento pertenece a una empresa NO VERIFICADA";
+                }
+                setVerificacionMensaje(verificacionMensaje);
+            })
+            .catch(error => {
+                console.log(error);
+            });
+    }, []);
+
+
 
     const encrypt = (data, key) => {
         const encryptedData = CryptoJS.AES.encrypt(data, key).toString();
@@ -228,7 +229,13 @@ export const Fila = ({ evento }) => {
                                 error={numEntradasError}
                                 helperText={numEntradasError && 'Por favor, ingrese un Número de Entradas válido'}
                             />
-                            {compra && <h4>{compra}</h4>}
+                            {compra && (
+                                <div>
+                                    <QRCode
+                                        value={compra}
+                                    />
+                                </div>
+                            )}
                         </DialogContent>
                         <DialogActions>
                             <Button onClick={handleClose}>CANCELAR</Button>
