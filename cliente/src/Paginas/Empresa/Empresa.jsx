@@ -47,6 +47,7 @@ export const Empresa = () => {
   const [eventoError, setEventError] = useState('');
 
   const [open, setOpen] = useState(false);
+  const [click, setClick] = useState(false);
 
   const navigate = useNavigate();
 
@@ -87,6 +88,42 @@ export const Empresa = () => {
         })
     }
 };
+
+    const eliminarCuenta = (idEmp) => {
+        setLogoutError('');
+        if(!!userData){
+            axios({
+                ...axiosConfig,
+                url: 'http://localhost:8000/eliminarempresa',
+                method: 'DELETE',
+                data:{id: idEmp}
+                
+            }).then((response) =>{
+                if(response.data.status === 'Ok'){
+                    axios({
+                        ...axiosConfig,
+                        url: 'http://localhost:8000/logout',
+                        method: 'POST'
+                        
+                    }).then((response) =>{
+                        if(response.data.status === 'Ok')
+                            navigate('/'); // Navega a la página de Inicio
+                        else
+                            setLogoutError(response.data.error);
+                    })
+                    .catch((error) => {
+                        console.log('Error en el cierre de sesión');
+                        setLogoutError('Error en el Cierre de Sesión. Inténtelo más tarde.');
+                    })
+                }
+                    
+            })
+            .catch((error) => {
+                console.log('Error en la eliminación de la cuenta:', error);
+                setLogoutError('Error en la eliminación de la cuenta. Inténtelo más tarde.');
+            })
+        }
+    };
 
     const crearEvento = (event) => {
         event.preventDefault();
@@ -135,10 +172,20 @@ export const Empresa = () => {
               })
               .catch((error) => {
                   console.log('Error en la creación del evento:', error);
-                  setEventError('Error en la creación del Evento.');
+                  setEventError('Error en la creación del evento. Compruebe los datos introducidos y el Nombre del Evento (Único)');
               });
         }
         
+    };
+
+    // Abrir Dialog
+    const clickEliminar = () => {
+        setClick(true);
+    };
+
+    // Cerrar Dialog
+    const eliminarClose = () => {
+        setClick(false);
     };
 
     // Abrir Dialog
@@ -158,9 +205,21 @@ export const Empresa = () => {
         <Paper>
           <Typography variant="h4" color="primary">EMPRESA PROMOTORA</Typography>
           <Button onClick={e => performLogout(e)}>CERRAR SESION</Button>
-          <Typography>{!!userData && userData.id}</Typography>
-          <Typography>{!!userData && userData.userType}</Typography>
           {!!logoutError && <Typography>{logoutError}</Typography>}
+
+          <Button onClick={clickEliminar}>ELIMINAR EMPRESA</Button>
+          <Dialog open={click} onClose={eliminarClose}>
+            <DialogTitle>ELIMINAR EMPRESA</DialogTitle>
+            <DialogContent>
+            <DialogContentText>
+                ¿De verdad desea eliminar su cuenta?
+            </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+            <Button onClick={eliminarClose}>CANCELAR</Button>
+            <Button onClick={() => eliminarCuenta(userData.id)}>ELIMINAR CUENTA</Button>
+            </DialogActions>
+            </Dialog>
           
           <Button onClick={handleClickOpen}>CREAR EVENTO</Button>
           <Dialog open={open} onClose={handleClose}>

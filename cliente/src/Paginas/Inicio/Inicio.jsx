@@ -51,17 +51,3 @@ export const Inicio = () => {
         <Alert severity="error">Ya has iniciado sesión</Alert></Snackbar>
     );
 };
-
-/*
-
-      axios({
-          ...axiosConfig,
-          url: 'http://localhost:8000/user',
-          method: 'GET'          
-      })
-      .then(res => {
-        setUserData(res.data);
-        setFinishLoading(!!res.data && !!res.data.userType);        
-    })
-        .catch(err => console.log(err))
-*/

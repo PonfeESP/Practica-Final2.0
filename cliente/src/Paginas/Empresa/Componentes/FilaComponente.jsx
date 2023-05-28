@@ -17,6 +17,9 @@ export const Fila = ({evento}) => {
     
     const [open, setOpen] = useState(false);
 
+    const [visible, setVisible] = useState(true);
+    const [estado, setEstado] = useState('');
+
     const [nombre, setNombre] = useState();
     const [artista, setArtista] = useState();
     const [ubicacion, setUbicacion] = useState();
@@ -44,11 +47,47 @@ export const Fila = ({evento}) => {
     };
 
     const performCancelar = (idEvent) => {
-
+      setEstado('');
+      axios({
+        ...axiosConfig,
+        url: 'http://localhost:8000/modificarevento',
+        method: 'PUT',
+        data: {id: idEvent, cancelada: true}
+      })
+        .then((response) => {
+          if (response.data.status === 'OK') {
+            setVisible(false);
+            setEstado('CANCELADO')
+          } else {
+            setEstado(response.data.status);
+          }
+        })
+        .catch((error) => {
+          console.log('Error en la cancelación del Evento:', error);
+          setEstado('Error en la cancelación del Evento.');
+        });
     }
 
     const performDeleteEvent = (idEvent) => {
-
+      setEstado('');
+      axios({
+        ...axiosConfig,
+        url: 'http://localhost:8000/eliminarevento',
+        method: 'DELETE',
+        data: {id: idEvent}
+      })
+        .then((response) => {
+          if (response.data.status === 'OK') {
+            setVisible(false);
+            setEstado('ELIMINADO')
+          } else {
+            setEstado(response.data.status);
+          }
+        })
+        .catch((error) => {
+          console.log('Error en la eliminación del Evento:', error);
+          setEstado('Error en la eliminación del Evento.');
+        });
     }
 
     const performModificar = (idEvent, ocupado) => {
@@ -113,6 +152,7 @@ export const Fila = ({evento}) => {
       };
 
     return (
+        !!visible ? 
         <React.Fragment>
             <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
                 <TableCell>
@@ -146,7 +186,7 @@ export const Fila = ({evento}) => {
                         <DialogContent>
                         
                         <DialogContentText>
-                            Por favor, complete el formulario de registro.
+                            A continuación se muestra la información actual. Cambie lo que considere.
                         </DialogContentText>
 
                         <TextField
@@ -246,6 +286,12 @@ export const Fila = ({evento}) => {
                     <Typography> <Button onClick={() => performDeleteEvent(evento.id)}>ELIMINAR EVENTO</Button></Typography>
                 </TableCell>
             </TableRow>
+            {estado!=='' &&<Typography>estado</Typography>}
+        </React.Fragment> :
+        <React.Fragment>
+          
+            <div align="center"><h5>El Evento ha sido {estado}</h5></div>
+          
         </React.Fragment>
     );
 }
