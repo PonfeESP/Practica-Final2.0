@@ -73,7 +73,7 @@ export const EmpresaPag = () => {
                 </TableBody>
             </Table>
         </TableContainer>
-    </div> : <Typography sx={{ fontWeight: 'bold' }}>NO TIENES NINGÚN EVENTO. CREA UNO!</Typography>
+    </div> : <Typography sx={{ fontWeight: 'bold' }}>¿NO HAS VIVIDO LA EXPERIENCIA DE CREAR TU PRIMER EVENTO AQUÍ? ¡CREA UNO EN EL BOTÓN 'CREAR EVENTO'!</Typography>
     );
 }
 

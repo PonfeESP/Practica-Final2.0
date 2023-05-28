@@ -471,7 +471,9 @@ app.delete("/eliminarcliente", (req, res) => {
               .deleteById(clienteId)
               .then(contador => {
                 if (contador > 0) {
-                  return res.status(200).json({ status: "OK" });
+                  delete req.user; // <-- Elimina el req.user
+                  req.session.destroy(); // <-- Destruye la sesión
+                  res.status(200).clearCookie('SessionCookie.SID', { path: "/" }).json({ status: "Ok" });
                 } else {
                   return res.status(500).json({ error: "Error al eliminar el cliente" });
                 }

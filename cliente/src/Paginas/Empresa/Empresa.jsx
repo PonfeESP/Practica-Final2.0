@@ -21,11 +21,15 @@ import {EmpresaPag} from './Componentes/EmpresaPag';
 import { axiosConfig } from '../../constant/axiosConfig.constant.js';
 
 export const Empresa = () => {
+    //Control de Usuario
   const [userData, setUserData] = useState();
   const [logoutError, setLogoutError] = useState();
   const [finishLoading, setFinishLoading] = useState(null);
 
+  const [verificacionMensaje, setVerificacionMensaje] = useState("");
 
+
+  //Registro de Eventos
   const [nombre, setNombre] = useState();
   const [artista, setArtista] = useState();
   const [ubicacion, setUbicacion] = useState();
@@ -46,13 +50,15 @@ export const Empresa = () => {
 
   const [eventoError, setEventError] = useState('');
 
+  //Control de Dialogs
   const [open, setOpen] = useState(false);
+  const [click, setClick] = useState(false);
 
   const navigate = useNavigate();
 
   useEffect(() => { // Obtener User
 
-    document.title = "OC.IO - ADMIN";
+    document.title = "OC.IO - EMPRESA";
     axios({
         ...axiosConfig,
         url: 'http://localhost:8000/user',
@@ -61,11 +67,29 @@ export const Empresa = () => {
     .then(res => {
       setUserData(res.data);
       setFinishLoading(!!res.data && !!res.data.userType && res.data.userType === 'empresa');
+      if(!!res.data && !!res.data.userType && res.data.userType === 'empresa'){
+        axios.get('http://localhost:8000/mensajeverificada', {
+          params: { id: res.data.id }
+        })
+          .then(response => {
+            const mensaje = response.data.mensaje;
+            let verificacionMensaje = "";
+            if (mensaje === "VERIFICADA") {
+              verificacionMensaje = "VERIFICADA";
+            } else if (mensaje === "NO VERIFICADA") {
+              verificacionMensaje = "NO VERIFICADA";
+            }
+            setVerificacionMensaje(verificacionMensaje);
+          })
+          .catch(error => {
+            console.log(error);
+          });
+      }
       })
       .catch(err => console.log(err))
   }, []);
 
-  const performLogout = (event) => {
+  const performLogout = (event) => { //Realizar Logout
     event.preventDefault();
     setLogoutError('');
 
@@ -88,7 +112,13 @@ export const Empresa = () => {
     }
 };
 
-    const crearEvento = (event) => {
+    const eliminarCuenta = (idEmp) => { //Eliminación de la cuenta actual
+        setLogoutError('');
+        if(!!userData){
+        }
+    };
+
+    const crearEvento = (event) => { //Creación del Evento
         event.preventDefault();
         
         setAforoError(false);
@@ -135,18 +165,28 @@ export const Empresa = () => {
               })
               .catch((error) => {
                   console.log('Error en la creación del evento:', error);
-                  setEventError('Error en la creación del Evento.');
+                  setEventError('Error en la creación del evento. Compruebe los datos introducidos y el Nombre del Evento (Único)');
               });
         }
         
     };
 
-    // Abrir Dialog
+    // Abrir Dialog Eliminar
+    const clickEliminar = () => {
+        setClick(true);
+    };
+
+    // Cerrar Dialog Eliminar
+    const eliminarClose = () => {
+        setClick(false);
+    };
+
+    // Abrir Dialog Crear
     const handleClickOpen = () => {
         setOpen(true);
     };
     
-    // Cerrar Dialog
+    // Cerrar Dialog Crear
     const handleClose = () => {
         setOpen(false);
     };
@@ -156,11 +196,23 @@ export const Empresa = () => {
     return (!!finishLoading ?
       <div>
         <Paper>
-          <Typography variant="h4" color="primary">EMPRESA PROMOTORA</Typography>
+          <Typography variant="h4" color="primary">EMPRESA PROMOTORA {verificacionMensaje}</Typography>
           <Button onClick={e => performLogout(e)}>CERRAR SESION</Button>
-          <Typography>{!!userData && userData.id}</Typography>
-          <Typography>{!!userData && userData.userType}</Typography>
           {!!logoutError && <Typography>{logoutError}</Typography>}
+
+          <Button onClick={clickEliminar}>ELIMINAR CUENTA</Button>
+          <Dialog open={click} onClose={eliminarClose}>
+            <DialogTitle>ELIMINAR EMPRESA</DialogTitle>
+            <DialogContent>
+            <DialogContentText>
+                ¿De verdad desea eliminar su cuenta?
+            </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+            <Button onClick={eliminarClose}>CANCELAR</Button>
+            <Button onClick={() => eliminarCuenta(userData.id)}>ELIMINAR CUENTA</Button>
+            </DialogActions>
+            </Dialog>
           
           <Button onClick={handleClickOpen}>CREAR EVENTO</Button>
           <Dialog open={open} onClose={handleClose}>

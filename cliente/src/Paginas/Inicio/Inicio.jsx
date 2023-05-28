@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // Importaciones de Material UI
-import { Paper, Typography, Button, Alert, Snackbar } from '@mui/material';
+import { Paper, Alert, Snackbar } from '@mui/material';
 
 // Importación de Axios
 import axios from 'axios';
@@ -51,17 +51,3 @@ export const Inicio = () => {
         <Alert severity="error">Ya has iniciado sesión</Alert></Snackbar>
     );
 };
-
-/*
-
-      axios({
-          ...axiosConfig,
-          url: 'http://localhost:8000/user',
-          method: 'GET'          
-      })
-      .then(res => {
-        setUserData(res.data);
-        setFinishLoading(!!res.data && !!res.data.userType);        
-    })
-        .catch(err => console.log(err))
-*/
