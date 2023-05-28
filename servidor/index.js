@@ -616,6 +616,7 @@ app.put("/modificarevento", (req, res) => {
   if (!!req.isAuthenticated()) {
   const dbQuery = Evento.query();
   const eventoId = req.body.id;
+const aforoe = parseInt(req.body.aforo);
 
   dbQuery
     .findById(eventoId)
@@ -630,32 +631,31 @@ app.put("/modificarevento", (req, res) => {
         const tiempoEvento = moment(fechaEvento).set({ 'hour': horaEvento.hours(), 'minute': horaEvento.minutes() });
         const tiempoActual = moment(fechaActual).set({ 'hour': horaActual.hours(), 'minute': horaActual.minutes() });
         const valido = (tiempoEvento - tiempoActual) / (1000 * 60 * 60);
-
         const fechaEventoNueva = moment(req.body.fecha, 'YYYY-MM-DD', true);
-          const horaEventoNueva = moment(req.body.hora, 'HH:mm', true);
+        const horaEventoNueva = moment(req.body.hora, 'HH:mm', true);
 
-          if (!!req.body.fecha) {
-            if (!fechaEventoNueva.isValid()) {
-              return res.status(400).json({ error: "Fecha de evento inválida" });
-            }
+        if (!!req.body.fecha) {
+          if (!fechaEventoNueva.isValid()) {
+            return res.status(400).json({ error: "Fecha de evento inválida" });
           }
-          if (!!req.body.hora) {
-            if (!horaEventoNueva.isValid()) {
-              return res.status(400).json({ error: "Hora de evento inválida" });
-            }
+        }
+        if (!!req.body.hora) {
+          if (!horaEventoNueva.isValid()) {
+            return res.status(400).json({ error: "Hora de evento inválida" });
           }
+        }
 
-          const tiempoNuevo = moment(fechaEventoNueva).set({ 'hour': horaEventoNueva.hours(), 'minute': horaEventoNueva.minutes() });
-          const valido2 = !!req.body.fecha && !!req.body.hora ? (tiempoNuevo - tiempoActual) / (1000 * 60 * 60) : 25
+        const tiempoNuevo = moment(fechaEventoNueva).set({ 'hour': horaEventoNueva.hours(), 'minute': horaEventoNueva.minutes() });
+        const valido2 = !!req.body.fecha && !!req.body.hora ? (tiempoNuevo - tiempoActual) / (1000 * 60 * 60) : 25
 
-          if (valido > 24 && valido2 > 24) {
+        if (valido > 24 && valido2 > 24) {
           evento
             .$query()
             .patch({
               nombre: req.body.nombre,
               artista: req.body.artista,
               ubicacion: req.body.ubicacion,
-              aforo: req.body.aforo,
+              aforo: aforoe,
               descripcion: req.body.descripcion,
               fecha: req.body.fecha,
               hora: req.body.hora,
