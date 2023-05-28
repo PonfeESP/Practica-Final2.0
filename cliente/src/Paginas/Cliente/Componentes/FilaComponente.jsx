@@ -48,8 +48,6 @@ export const Fila = ({ evento }) => {
         setOpen(false);
     };
 
-    const eventoId = evento.empresa_promotora_id;
-
     useEffect(() => {
         // Llamada al endpoint mensajeverificada
         axios.get('http://localhost:8000/mensajeverificada', {
@@ -93,7 +91,7 @@ export const Fila = ({ evento }) => {
         if (caducidad === '' || caducidad.length < 7) setCaducidadError(true);
         if (tarjetaCredito === '' || tarjetaCredito.length < 16) setTarjetaError(true);
 
-        if (cvvError === false && numEntradasError == false && caducidadError === false && tarjetaError === false) {
+        if (cvvError === false && numEntradasError === false && caducidadError === false && tarjetaError === false) {
             axios({
                 ...axiosConfig,
                 url: 'http://localhost:8000/pago',
