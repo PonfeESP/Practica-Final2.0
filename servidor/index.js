@@ -101,7 +101,7 @@ app.post("/logout", (req, res) => {
       delete req.user; // <-- Elimina el req.user
       req.session.destroy(); // <-- Destruye la sesión
       res.status(200).clearCookie('SessionCookie.SID', { path: "/" }).json({ status: "Ok" });
-    } 
+    }
   })
 });
 
@@ -211,7 +211,7 @@ app.post("/registroempresa", async (req, res) => {
 
 
 app.post("/registrocliente", async (req, res) => {
-  
+
   const dbQuery = Cliente.query();
   try {
     const email = req.body.email;
@@ -287,65 +287,65 @@ app.post("/registrocliente", async (req, res) => {
 
 app.post("/registroeventos", (req, res) => {
   if (!!req.isAuthenticated()) {
-  const dbQuery = Evento.query();
-  dbQuery.findOne({ nombre: req.body.nombre }).then(async result => {
-    if (!!result) {
-      return res.status(500).json({ error: "El evento ya está registrado" });
-    }
+    const dbQuery = Evento.query();
+    dbQuery.findOne({ nombre: req.body.nombre }).then(async result => {
+      if (!!result) {
+        return res.status(500).json({ error: "El evento ya está registrado" });
+      }
 
-    const fechaEvento = moment(req.body.fecha, 'YYYY-MM-DD', true);
-    const horaEvento = moment(req.body.hora, 'HH:mm', true);
+      const fechaEvento = moment(req.body.fecha, 'YYYY-MM-DD', true);
+      const horaEvento = moment(req.body.hora, 'HH:mm', true);
 
-    if (!fechaEvento.isValid() || !horaEvento.isValid()) {
-      return res.status(400).json({ error: "Fecha u hora de evento inválida" });
-    }
+      if (!fechaEvento.isValid() || !horaEvento.isValid()) {
+        return res.status(400).json({ error: "Fecha u hora de evento inválida" });
+      }
 
-    const fechaActual = moment();
-    const horaActual = moment();
-    const tiempoEvento = moment(fechaEvento).set({ 'hour': horaEvento.hours(), 'minute': horaEvento.minutes() });
-    const tiempoActual = moment(fechaActual).set({ 'hour': horaActual.hours(), 'minute': horaActual.minutes() });
-    const valido = (tiempoEvento - tiempoActual) / (1000 * 60 * 60);
+      const fechaActual = moment();
+      const horaActual = moment();
+      const tiempoEvento = moment(fechaEvento).set({ 'hour': horaEvento.hours(), 'minute': horaEvento.minutes() });
+      const tiempoActual = moment(fechaActual).set({ 'hour': horaActual.hours(), 'minute': horaActual.minutes() });
+      const valido = (tiempoEvento - tiempoActual) / (1000 * 60 * 60);
 
-    if (valido < 24) {
-      return res.status(400).json({ error: "Quedan menos de 24 horas hasta el evento, no se puede registrar" });
-    }
+      if (valido < 24) {
+        return res.status(400).json({ error: "Quedan menos de 24 horas hasta el evento, no se puede registrar" });
+      }
 
-    EmpresaPromotora.query()
-      .findById(req.body.empresa_promotora_id)
-      .then(async empresa => {
-        if (!empresa) {
-          return res.status(400).json({ error: "La empresa promotora no existe" });
-        }
+      EmpresaPromotora.query()
+        .findById(req.body.empresa_promotora_id)
+        .then(async empresa => {
+          if (!empresa) {
+            return res.status(400).json({ error: "La empresa promotora no existe" });
+          }
 
-        dbQuery
-          .insert({
-            nombre: req.body.nombre,
-            artista: req.body.artista,
-            ubicacion: req.body.ubicacion,
-            aforo: req.body.aforo,
-            descripcion: req.body.descripcion,
-            fecha: req.body.fecha,
-            hora: req.body.hora,
-            precio_entrada: req.body.precio_entrada,
-            empresa_promotora_id: req.body.empresa_promotora_id,
-            aforo_ocupado: 0,
-            cancelada: false
-          })
-          .then(insertar => {
-            if (!!insertar) {
-              return res.status(200).json({ status: "OK" });
-            } else {
+          dbQuery
+            .insert({
+              nombre: req.body.nombre,
+              artista: req.body.artista,
+              ubicacion: req.body.ubicacion,
+              aforo: req.body.aforo,
+              descripcion: req.body.descripcion,
+              fecha: req.body.fecha,
+              hora: req.body.hora,
+              precio_entrada: req.body.precio_entrada,
+              empresa_promotora_id: req.body.empresa_promotora_id,
+              aforo_ocupado: 0,
+              cancelada: false
+            })
+            .then(insertar => {
+              if (!!insertar) {
+                return res.status(200).json({ status: "OK" });
+              } else {
+                return res.status(500).json({ status: "Error al registrar el evento" });
+              }
+            })
+            .catch(error => {
               return res.status(500).json({ status: "Error al registrar el evento" });
-            }
-          })
-          .catch(error => {
-            return res.status(500).json({ status: "Error al registrar el evento" });
-          });
-      })
-      .catch(error => {
-        return res.status(500).json({ status: "Error al buscar la empresa promotora" });
-      });
-  });
+            });
+        })
+        .catch(error => {
+          return res.status(500).json({ status: "Error al buscar la empresa promotora" });
+        });
+    });
   } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
@@ -353,29 +353,29 @@ app.post("/registroeventos", (req, res) => {
 
 app.put("/verificarempresa", (req, res) => {
   if (!!req.isAuthenticated()) {
-  const empresaId = req.body.id;
+    const empresaId = req.body.id;
 
-  EmpresaPromotora.query()
-    .findOne({ id: empresaId })
-    .then(empresa => {
-      if (!empresa) {
-        return res.status(404).json({ error: "La empresa no existe" });
-      } else {
-        EmpresaPromotora.query()
-          .patch({ verificada: true })
-          .where({ id: empresaId })
-          .then(() => {
-            return res.status(200).json({ status: "OK" });
-          })
-          .catch(error => {
-            return res.status(500).json({ error: "Error al verificar la empresa" });
-          });
-      }
-    })
-    .catch(error => {
-      return res.status(500).json({ error: "Error al buscar la empresa" });
-    });
-    } else res.status(401).json({ error: "Sesión no iniciada" })
+    EmpresaPromotora.query()
+      .findOne({ id: empresaId })
+      .then(empresa => {
+        if (!empresa) {
+          return res.status(404).json({ error: "La empresa no existe" });
+        } else {
+          EmpresaPromotora.query()
+            .patch({ verificada: true })
+            .where({ id: empresaId })
+            .then(() => {
+              return res.status(200).json({ status: "OK" });
+            })
+            .catch(error => {
+              return res.status(500).json({ error: "Error al verificar la empresa" });
+            });
+        }
+      })
+      .catch(error => {
+        return res.status(500).json({ error: "Error al buscar la empresa" });
+      });
+  } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
 app.get("/mensajeverificada", (req, res) => { //mensajito para cuando una empresa no este verificada al hacer login
@@ -404,236 +404,285 @@ app.get("/mensajeverificada", (req, res) => { //mensajito para cuando una empres
 
 app.get('/mostrarempresas', (req, res) => {
   if (!!req.isAuthenticated()) {
-  const consulta = EmpresaPromotora.query();
+    const consulta = EmpresaPromotora.query();
 
-  if (!!req.body && req.body !== {}) {
-    // Filtrado por verificadas para admin
-    if (req.body.verificada !== undefined) {
-      consulta.where('verificada', req.body.verificada);
+    if (!!req.body && req.body !== {}) {
+      // Filtrado por verificadas para admin
+      if (req.body.verificada !== undefined) {
+        consulta.where('verificada', req.body.verificada);
+      }
     }
-  }
 
-  consulta
-    .then(resultado => res.status(200).json(resultado))
-    .catch(err => res.status(500).json({ error: 'Error al obtener las empresas' }));
-    } else res.status(401).json({ error: "Sesión no iniciada" })
+    consulta
+      .then(resultado => res.status(200).json(resultado))
+      .catch(err => res.status(500).json({ error: 'Error al obtener las empresas' }));
+  } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
 
 
 app.get('/mostrareventos', (req, res) => { //endpoint pa cliente
-  
-    const consulta = Evento.query();
-    const fechaActual = moment().format('YYYY-MM-DD');
 
-    consulta.where('fecha', '>', fechaActual);
-    consulta.where('cancelada', false);
-
-    consulta
-      .then(resultado => res.status(200).json(resultado))
-      .catch(err => res.status(500).json({ error: 'Error al obtener los eventos' }));
-  
-});
-
-app.get('/mostrareventos/empresa', (req, res) => { //endpoint pa empresas
-  if (!!req.isAuthenticated()) {
   const consulta = Evento.query();
-  const idempresa = req.user.id;
   const fechaActual = moment().format('YYYY-MM-DD');
 
-  consulta.where('fecha', '>', fechaActual).where('empresa_promotora_id', idempresa); //empresas pueden ver los eventos suyos ya pasados?
+  consulta.where('fecha', '>', fechaActual);
+  consulta.where('cancelada', false);
 
   consulta
     .then(resultado => res.status(200).json(resultado))
     .catch(err => res.status(500).json({ error: 'Error al obtener los eventos' }));
-    } else res.status(401).json({ error: "Sesión no iniciada" })
+
+});
+
+app.get('/mostrareventos/empresa', (req, res) => { //endpoint pa empresas
+  if (!!req.isAuthenticated()) {
+    const consulta = Evento.query();
+    const idempresa = req.user.id;
+    const fechaActual = moment().format('YYYY-MM-DD');
+
+    consulta.where('fecha', '>', fechaActual).where('empresa_promotora_id', idempresa); //empresas pueden ver los eventos suyos ya pasados?
+
+    consulta
+      .then(resultado => res.status(200).json(resultado))
+      .catch(err => res.status(500).json({ error: 'Error al obtener los eventos' }));
+  } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
 
 app.delete("/eliminarcliente", (req, res) => {
   if (!!req.isAuthenticated()) {
-  const dbQuery = Cliente.query();
-  const clienteId = req.body.id;
+    const dbQuery = Cliente.query();
+    const clienteId = req.body.id;
 
-  dbQuery
-    .findById(clienteId)
-    .then(cliente => {
-      if (!cliente) {
-        res.status(404).json({ error: "El cliente no existe" });
-      } else {
-        // Eliminar las ventas asociadas al cliente
-        Ventas.query()
-          .where({ cliente_id: clienteId })
-          .delete()
-          .then(() => {
-            // Eliminar el cliente después de eliminar las ventas
-            dbQuery
-              .deleteById(clienteId)
-              .then(contador => {
-                if (contador > 0) {
-                  return res.status(200).json({ status: "OK" });
-                } else {
+    dbQuery
+      .findById(clienteId)
+      .then(cliente => {
+        if (!cliente) {
+          res.status(404).json({ error: "El cliente no existe" });
+        } else {
+          // Eliminar las ventas asociadas al cliente
+          Ventas.query()
+            .where({ cliente_id: clienteId })
+            .delete()
+            .then(() => {
+              // Eliminar el cliente después de eliminar las ventas
+              dbQuery
+                .deleteById(clienteId)
+                .then(contador => {
+                  if (contador > 0) {
+                    delete req.user; // <-- Elimina el req.user
+                    req.session.destroy(); // <-- Destruye la sesión
+                    res.status(200).clearCookie('SessionCookie.SID', { path: "/" }).json({ status: "Ok" });
+                  } else {
+                    return res.status(500).json({ error: "Error al eliminar el cliente" });
+                  }
+                })
+                .catch(error => {
                   return res.status(500).json({ error: "Error al eliminar el cliente" });
-                }
-              })
-              .catch(error => {
-                return res.status(500).json({ error: "Error al eliminar el cliente" });
-              });
-          })
-          .catch(error => {
-            return res.status(500).json({ error: "Error al eliminar las ventas asociadas" });
-          });
-      }
-    })
-    .catch(error => {
-      return res.status(500).json({ error: "Error al buscar el cliente" });
-    });
-    } else res.status(401).json({ error: "Sesión no iniciada" })
+                });
+            })
+            .catch(error => {
+              return res.status(500).json({ error: "Error al eliminar las ventas asociadas" });
+            });
+        }
+      })
+      .catch(error => {
+        return res.status(500).json({ error: "Error al buscar el cliente" });
+      });
+  } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
 
 
 app.delete("/eliminarempresa", (req, res) => {
   if (!!req.isAuthenticated()) {
-  const dbQuery = EmpresaPromotora.query();
-  const empresaId = req.body.id;
+    const dbQuery = EmpresaPromotora.query();
+    const empresaId = req.body.id;
 
-  dbQuery
-    .findById(empresaId)
-    .then(empresa => {
-      if (!empresa) {
-        return res.status(404).json({ error: "La empresa no existe" });
-      } else {
-        Evento.query().where({ empresa_promotora_id: empresaId }).then(results => { //Promesas de Samu
-          Promise.all(results.map(async event => {
-            await Ventas.query().where({ evento_id: event.id }).patch({ evento_id: -1 });
-            return Evento.query().findById(event.id).delete();
-          })).then(salesDeletionResults => {
-            dbQuery.deleteById(empresaId)
-              .then(deleteResults => res.status(200).json({ status: "Ok" }))
-              .catch(err => {
-                debugger;
-                res.status(500).json({ error: "Error al eliminar la empresa" });
-              })
+    dbQuery
+      .findById(empresaId)
+      .then(empresa => {
+        if (!empresa) {
+          return res.status(404).json({ error: "La empresa no existe" });
+        } else {
+          Evento.query().where({ empresa_promotora_id: empresaId }).then(results => { //Promesas de Samu
+            Promise.all(results.map(async event => {
+              await Ventas.query().where({ evento_id: event.id }).patch({ evento_id: -1 });
+              return Evento.query().findById(event.id).delete();
+            })).then(salesDeletionResults => {
+              dbQuery.deleteById(empresaId)
+                .then(deleteResults => res.status(200).json({ status: "Ok" }))
+                .catch(err => {
+                  debugger;
+                  res.status(500).json({ error: "Error al eliminar la empresa" });
+                })
+            })
           })
-        })
-      }
-    })
-    .catch(error => {
-      return res.status(500).json({ error: "Error al buscar la empresa" });
-    });
-    } else res.status(401).json({ error: "Sesión no iniciada" })
+        }
+      })
+      .catch(error => {
+        return res.status(500).json({ error: "Error al buscar la empresa" });
+      });
+  } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
 
 app.delete("/eliminarevento", (req, res) => {
   if (!!req.isAuthenticated()) {
-  const dbQuery = Evento.query();
-  const eventoId = req.body.id;
+    const dbQuery = Evento.query();
+    const eventoId = req.body.id;
 
-  dbQuery
-    .findById(eventoId)
-    .then(evento => {
-      if (!evento) {
-        return res.status(404).json({ error: "El evento no existe" });
-      } else {
-        const fechaEvento = moment(evento.fecha, 'YYYY-MM-DD');
-        const horaEvento = moment(evento.hora, 'HH:mm');
-        const fechaActual = moment();
-        const horaActual = moment();
-        const tiempoEvento = moment(fechaEvento).set({ 'hour': horaEvento.hours(), 'minute': horaEvento.minutes() });
-        const tiempoActual = moment(fechaActual).set({ 'hour': horaActual.hours(), 'minute': horaActual.minutes() });
-        const valido = (tiempoEvento - tiempoActual) / (1000 * 60 * 60);
-
-        if (valido > 24) {
-          Ventas.query()
-            .where({ evento_id: eventoId })
-            .patch({ evento_id: -1 })
-            .then(() => {
-              dbQuery
-                .deleteById(eventoId)
-                .then(contador => {
-                  if (contador > 0) {
-                    return res.status(200).json({ status: "OK" });
-                  } else {
-                    return res.status(500).json({ error: "Error al eliminar el evento" });
-                  }
-                })
-                .catch(error => {
-                  return res.status(500).json({ error: "Error al eliminar el evento" });
-                });
-            })
-            .catch(error => {
-              return res.status(500).json({ error: "Error al actualizar las ventas" });
-            });
+    dbQuery
+      .findById(eventoId)
+      .then(evento => {
+        if (!evento) {
+          return res.status(404).json({ error: "El evento no existe" });
         } else {
-          return res.status(400).json({ error: "Quedan menos de 24H hasta el evento, no puede ser eliminado" });
+          const fechaEvento = moment(evento.fecha, 'YYYY-MM-DD');
+          const horaEvento = moment(evento.hora, 'HH:mm');
+          const fechaActual = moment();
+          const horaActual = moment();
+          const tiempoEvento = moment(fechaEvento).set({ 'hour': horaEvento.hours(), 'minute': horaEvento.minutes() });
+          const tiempoActual = moment(fechaActual).set({ 'hour': horaActual.hours(), 'minute': horaActual.minutes() });
+          const valido = (tiempoEvento - tiempoActual) / (1000 * 60 * 60);
+
+          if (valido > 24) {
+            Ventas.query()
+              .where({ evento_id: eventoId })
+              .patch({ evento_id: -1 })
+              .then(() => {
+                dbQuery
+                  .deleteById(eventoId)
+                  .then(contador => {
+                    if (contador > 0) {
+                      return res.status(200).json({ status: "OK" });
+                    } else {
+                      return res.status(500).json({ error: "Error al eliminar el evento" });
+                    }
+                  })
+                  .catch(error => {
+                    return res.status(500).json({ error: "Error al eliminar el evento" });
+                  });
+              })
+              .catch(error => {
+                return res.status(500).json({ error: "Error al actualizar las ventas" });
+              });
+          } else {
+            return res.status(400).json({ error: "Quedan menos de 24H hasta el evento, no puede ser eliminado" });
+          }
         }
-      }
-    })
-    .catch(error => {
-      return res.status(500).json({ error: "Error al buscar el evento" });
-    });
-    } else res.status(401).json({ error: "Sesión no iniciada" })
+      })
+      .catch(error => {
+        return res.status(500).json({ error: "Error al buscar el evento" });
+      });
+  } else res.status(401).json({ error: "Sesión no iniciada" })
+});
+
+app.delete("/eliminarcuentaempresa", (req, res) => {
+  if (!!req.isAuthenticated()) {
+    const dbQuery = EmpresaPromotora.query();
+    const empresaId = req.body.id;
+
+    dbQuery
+      .findById(empresaId)
+      .then(empresa => {
+        if (!empresa) {
+          return res.status(404).json({ error: "La empresa no existe" });
+        } else {
+          Evento.query().where({ empresa_promotora_id: empresaId }).then(results => { //Promesas de Samu
+            Promise.all(results.map(async event => {
+              await Ventas.query().where({ evento_id: event.id }).patch({ evento_id: -1 });
+              return Evento.query().findById(event.id).delete();
+            })).then(salesDeletionResults => {
+              dbQuery.deleteById(empresaId)
+                .then(deleteResults => {
+                  delete req.user; // <-- Elimina el req.user
+                  req.session.destroy(); // <-- Destruye la sesión
+                  res.status(200).clearCookie('SessionCookie.SID', { path: "/" }).json({ status: "Ok" });
+                }
+                )
+                .catch(err => {
+                  debugger;
+                  res.status(500).json({ error: "Error al eliminar la empresa" });
+                })
+            })
+          })
+        }
+      })
+      .catch(error => {
+        return res.status(500).json({ error: "Error al buscar la empresa" });
+      });
+  } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
 
 app.put("/modificarevento", (req, res) => {
   if (!!req.isAuthenticated()) {
-  const dbQuery = Evento.query();
-  const eventoId = req.body.id;
-  /*const nombremod = req.body.nombre;
-  const artistamod = req.body.artista;
-  const ubicacionmod = req.body.ubicacion;
-  const descripcionmod = req.body.descripcion;
-  const aforomod = req.body.aforo;
-  const fechamod = req.body.fecha;
-  const horamod = req.body.hora;
-  const preciomod = req.body.precio_entrada;*/
+    const dbQuery = Evento.query();
+    const eventoId = req.body.id;
+    const aforonuevo = parseInt(req.body.aforo);
 
-  dbQuery
-    .findById(eventoId)
-    .then(evento => {
-      if (!evento) {
-        return res.status(404).json({ error: "El evento no existe" });
-      } else {
-        const fechaEvento = moment(evento.fecha, 'YYYY-MM-DD');
-        const horaEvento = moment(evento.hora, 'HH:mm');
-        const fechaActual = moment();
-        const horaActual = moment();
-        const tiempoEvento = moment(fechaEvento).set({ 'hour': horaEvento.hours(), 'minute': horaEvento.minutes() });
-        const tiempoActual = moment(fechaActual).set({ 'hour': horaActual.hours(), 'minute': horaActual.minutes() });
-        const valido = (tiempoEvento - tiempoActual) / (1000 * 60 * 60);
-
-        if (valido > 24) {
-          evento
-            .$query()
-            .patch({
-              nombre: req.body.nombre,
-              artista: req.body.artista,
-              ubicacion: req.body.ubicacion,
-              aforo: req.body.aforo,
-              descripcion: req.body.descripcion,
-              fecha: req.body.fecha,
-              hora: req.body.hora,
-              precio_entrada: req.body.precio_entrada,
-              cancelada: req.body.cancelada,  //Recordar en el front que para cancelar llamo a este endpoint y paso solo este valor, no hay endpoint de cancelar, no tengo q hacerlo
-            })
-            .then(() => {
-              return res.status(200).json({ status: "OK" });
-            })
-            .catch(error => {
-              return res.status(500).json({ error: "Error al modificar la información del evento" });
-            });
+    dbQuery
+      .findById(eventoId)
+      .then(evento => {
+        if (!evento) {
+          return res.status(404).json({ error: "El evento no existe" });
         } else {
-          return res.status(400).json({ error: "Quedan menos de 24 horas hasta el evento, no se puede modificar" });
+          const fechaEvento = moment(evento.fecha, 'YYYY-MM-DD');
+          const horaEvento = moment(evento.hora, 'HH:mm');
+          const fechaActual = moment();
+          const horaActual = moment();
+          const tiempoEvento = moment(fechaEvento).set({ 'hour': horaEvento.hours(), 'minute': horaEvento.minutes() });
+          const tiempoActual = moment(fechaActual).set({ 'hour': horaActual.hours(), 'minute': horaActual.minutes() });
+          const valido = (tiempoEvento - tiempoActual) / (1000 * 60 * 60);
+
+          const fechaEventoNueva = moment(req.body.fecha, 'YYYY-MM-DD', true);
+          const horaEventoNueva = moment(req.body.hora, 'HH:mm', true);
+
+          if (!!req.body.fecha) {
+            if (!fechaEventoNueva.isValid()) {
+              return res.status(400).json({ error: "Fecha de evento inválida" });
+            }
+          }
+          if (!!req.body.hora) {
+            if (!horaEventoNueva.isValid()) {
+              return res.status(400).json({ error: "Hora de evento inválida" });
+            }
+          }
+
+          const tiempoNuevo = moment(fechaEventoNueva).set({ 'hour': horaEventoNueva.hours(), 'minute': horaEventoNueva.minutes() });
+          const valido2 = !!req.body.fecha && !!req.body.hora ? (tiempoNuevo - tiempoActual) / (1000 * 60 * 60) : 25
+
+          if (valido > 24 && valido2 > 24) {
+            evento
+              .$query()
+              .patch({
+                nombre: req.body.nombre,
+                artista: req.body.artista,
+                ubicacion: req.body.ubicacion,
+                aforo: aforonuevo,
+                descripcion: req.body.descripcion,
+                fecha: req.body.fecha,
+                hora: req.body.hora,
+                precio_entrada: req.body.precio_entrada,
+                cancelada: req.body.cancelada,  //Recordar en el front que para cancelar llamo a este endpoint y paso solo este valor, no hay endpoint de cancelar, no tengo q hacerlo
+              })
+              .then(() => {
+                return res.status(200).json({ status: "OK" });
+              })
+              .catch(error => {
+                return res.status(500).json({ error: "Error al modificar la información del evento" });
+              });
+          } else {
+            return res.status(400).json({ error: "Quedan menos de 24 horas hasta el evento, no se puede modificar" });
+          }
         }
-      }
-    })
-    .catch(error => {
-      return res.status(500).json({ error: "Error al buscar el evento" });
-    });
-    } else res.status(401).json({ error: "Sesión no iniciada" })
+      })
+      .catch(error => {
+        return res.status(500).json({ error: "Error al buscar el evento" });
+      });
+  } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
 
@@ -670,8 +719,8 @@ app.post("/pago", async (req, res) => {
   if (!!req.isAuthenticated()) {
 
     const decryptedTarjeta = decrypt(req.body.tarjeta_credito, 'clave-secreta');
-  const decryptedCVV = decrypt(req.body.cvv, 'clave-secreta');
-  const decryptedFechaCaducidad = decrypt(req.body.fecha_caducidad, 'clave-secreta');
+    const decryptedCVV = decrypt(req.body.cvv, 'clave-secreta');
+    const decryptedFechaCaducidad = decrypt(req.body.fecha_caducidad, 'clave-secreta');
 
     const cardDetails = {
       tarjeta: decryptedTarjeta,

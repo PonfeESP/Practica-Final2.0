@@ -115,8 +115,25 @@ export const Empresa = () => {
     const eliminarCuenta = (idEmp) => { //Eliminación de la cuenta actual
         setLogoutError('');
         if(!!userData){
+          axios({
+            ...axiosConfig,
+              url: 'http://localhost:8000/eliminarcuentaempresa',
+              method: 'DELETE',
+              data: {id: idEmp}
+              
+          }).then((response) =>{
+              if(response.data.status === 'Ok')
+                  navigate('/'); // Navega a la página de Inicio
+              else
+                  setLogoutError(response.data.error);
+          })
+          .catch((error) => {
+              console.log('Error en la eliminación de cuenta');
+              setLogoutError('Error en la eliminación de cuenta. Inténtelo más tarde.');
+          })
         }
     };
+
 
     const crearEvento = (event) => { //Creación del Evento
         event.preventDefault();
