@@ -616,7 +616,6 @@ app.put("/modificarevento", (req, res) => {
   if (!!req.isAuthenticated()) {
   const dbQuery = Evento.query();
   const eventoId = req.body.id;
-const aforoe = parseInt(req.body.aforo);
 
   dbQuery
     .findById(eventoId)
@@ -655,11 +654,11 @@ const aforoe = parseInt(req.body.aforo);
               nombre: req.body.nombre,
               artista: req.body.artista,
               ubicacion: req.body.ubicacion,
-              aforo: aforoe,
+              aforo: !!req.body.aforo ? parseInt(req.body.aforo) : parseInt(evento.aforo),
               descripcion: req.body.descripcion,
               fecha: req.body.fecha,
               hora: req.body.hora,
-              precio_entrada: req.body.precio_entrada,
+              precio_entrada: !!req.body.precio_entrada ? Number(req.body.precio_entrada) : Number(evento.precio_entrada),
               cancelada: req.body.cancelada,  //Recordar en el front que para cancelar llamo a este endpoint y paso solo este valor, no hay endpoint de cancelar, no tengo q hacerlo
             })
             .then(() => {
