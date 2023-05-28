@@ -277,11 +277,11 @@ export const Fila = ({evento}) => {
                         </Dialog>
 
                 </TableCell>
-                {evento.cancelada===false &&
+                
                 <TableCell>
                     <Typography> <Button onClick={() => performCancelar(evento.id)}>CANCELAR EVENTO</Button></Typography>
                 </TableCell>
-                }
+                
                 <TableCell>
                     <Typography> <Button onClick={() => performDeleteEvent(evento.id)}>ELIMINAR EVENTO</Button></Typography>
                 </TableCell>

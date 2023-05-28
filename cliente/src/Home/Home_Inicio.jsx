@@ -47,7 +47,3 @@ const Home = () => {
     </ThemeProvider>);
 }
 export default Home;
-/*
-<Route path="/admin" element={<Admin />} />
-                <Route path="/empresa" element={<Empresa />} />
-                <Route path="/cliente" element={<Cliente />} />*/

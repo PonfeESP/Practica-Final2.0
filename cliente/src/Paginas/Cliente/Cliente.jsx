@@ -7,8 +7,11 @@ import axios from 'axios';
 
 // Importaciones de Material UI
 import { Paper, Typography, Button, Alert, Snackbar } from '@mui/material';
-
-
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
 
 // Importaciones de Componentes
 import {ClientePag} from './Componentes/ClientePag';
@@ -18,6 +21,9 @@ export const Cliente = () => {
   const [logoutError, setLogoutError] = useState();
   const [userData, setUserData] = useState({});
   const [finishLoading, setFinishLoading] = useState(null);
+
+  //Control de Dialogs
+  const [click, setClick] = useState(false);
 
   const navigate = useNavigate();
 
@@ -58,6 +64,37 @@ export const Cliente = () => {
         })
     }
 };
+
+const eliminarCuenta = (idClient) => { //Eliminación de la cuenta actual
+  if(!!userData){
+    axios({
+      ...axiosConfig,
+        url: 'http://localhost:8000/eliminarcliente',
+        method: 'DELETE',
+        data: {id: idClient}
+        
+    }).then((response) =>{
+        if(response.data.status === 'Ok')
+            navigate('/'); // Navega a la página de Inicio
+        else
+            setLogoutError(response.data.error);
+    })
+    .catch((error) => {
+        console.log('Error en la eliminación de cuenta');
+        setLogoutError('Error en la eliminación de cuenta. Inténtelo más tarde.');
+    })
+  }
+}
+
+  // Abrir Dialog Eliminar
+    const clickEliminar = () => {
+        setClick(true);
+    };
+
+    // Cerrar Dialog Eliminar
+    const eliminarClose = () => {
+        setClick(false);
+    };
   
     return (
       !!finishLoading ?
@@ -66,6 +103,19 @@ export const Cliente = () => {
           <Typography variant="h4" color="primary">CLIENTE</Typography>
           <Button onClick={e => performLogout(e)}>CERRAR SESION</Button>
           {!!logoutError && <Typography>{logoutError}</Typography>}
+          <Button onClick={clickEliminar}>ELIMINAR CUENTA</Button>
+          <Dialog open={click} onClose={eliminarClose}>
+            <DialogTitle>ELIMINAR CLIENTE</DialogTitle>
+            <DialogContent>
+            <DialogContentText>
+                ¿De verdad desea eliminar su cuenta?
+            </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+            <Button onClick={eliminarClose}>CANCELAR</Button>
+            <Button onClick={() => eliminarCuenta(userData.id)}>ELIMINAR CUENTA</Button>
+            </DialogActions>
+            </Dialog>
 
           <ClientePag />
         </Paper>

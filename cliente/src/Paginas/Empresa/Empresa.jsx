@@ -115,36 +115,6 @@ export const Empresa = () => {
     const eliminarCuenta = (idEmp) => { //Eliminación de la cuenta actual
         setLogoutError('');
         if(!!userData){
-            axios({
-                ...axiosConfig,
-                url: 'http://localhost:8000/eliminarempresa',
-                method: 'DELETE',
-                data:{id: idEmp}
-                
-            }).then((response) =>{
-                if(response.data.status === 'Ok'){
-                    axios({
-                        ...axiosConfig,
-                        url: 'http://localhost:8000/logout',
-                        method: 'POST'
-                        
-                    }).then((response) =>{
-                        if(response.data.status === 'Ok')
-                            navigate('/'); // Navega a la página de Inicio
-                        else
-                            setLogoutError(response.data.error);
-                    })
-                    .catch((error) => {
-                        console.log('Error en el cierre de sesión');
-                        setLogoutError('Error en el Cierre de Sesión. Inténtelo más tarde.');
-                    })
-                }
-                    
-            })
-            .catch((error) => {
-                console.log('Error en la eliminación de la cuenta:', error);
-                setLogoutError('Error en la eliminación de la cuenta. Inténtelo más tarde.');
-            })
         }
     };
 
@@ -230,7 +200,7 @@ export const Empresa = () => {
           <Button onClick={e => performLogout(e)}>CERRAR SESION</Button>
           {!!logoutError && <Typography>{logoutError}</Typography>}
 
-          <Button onClick={clickEliminar}>ELIMINAR EMPRESA</Button>
+          <Button onClick={clickEliminar}>ELIMINAR CUENTA</Button>
           <Dialog open={click} onClose={eliminarClose}>
             <DialogTitle>ELIMINAR EMPRESA</DialogTitle>
             <DialogContent>
