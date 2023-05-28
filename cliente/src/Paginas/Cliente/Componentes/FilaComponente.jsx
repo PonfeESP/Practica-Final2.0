@@ -22,6 +22,7 @@ export const Fila = ({ evento }) => {
 
     const [open, setOpen] = useState(false);
     const [compra, setCompra] = useState('');
+    const [ticket, setTicket] = useState('');
 
     const [tarjetaCredito, setTarjetaCredito] = useState('');
     const [cvv, setCVV] = useState('');
@@ -33,6 +34,7 @@ export const Fila = ({ evento }) => {
     const [caducidadError, setCaducidadError] = useState(false);
     const [numEntradasError, setNumEntradasError] = useState(false);
     const [verificacionMensaje, setVerificacionMensaje] = useState("");
+
 
 
     // Abrir Dialogf
@@ -80,6 +82,8 @@ export const Fila = ({ evento }) => {
         setCVVError(false);
         setCaducidadError(false);
         setNumEntradasError(false);
+        setTicket('');
+        setCompra('');
         const encryptedTarjeta = encrypt(tarjetaCredito, 'clave-secreta');
         const encryptedCVV = encrypt(cvv, 'clave-secreta');
         const encryptedCaducidad = encrypt(caducidad, 'clave-secreta');
@@ -106,7 +110,8 @@ export const Fila = ({ evento }) => {
                 },
             })
                 .then((response) => {
-                    setCompra(response.data.id);
+                    setTicket(response.data.id);
+                    setCompra('Compra realizada con éxito, aquí tiene su QR.');
                 })
                 .catch((error) => {
                     console.log('Error en la compra: ', error);
@@ -229,10 +234,12 @@ export const Fila = ({ evento }) => {
                                 error={numEntradasError}
                                 helperText={numEntradasError && 'Por favor, ingrese un Número de Entradas válido'}
                             />
-                            {compra && (
+
+                            {compra && <Typography>{compra}</Typography>}
+                            {!!ticket && (
                                 <div>
                                     <QRCode
-                                        value={compra}
+                                        value={ticket}
                                     />
                                 </div>
                             )}
