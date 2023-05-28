@@ -98,8 +98,8 @@ app.post("/logout", (req, res) => {
   req.logout(err => {
     if (!!err) res.status(500).json({ error: "No se ha podido cerrar sesión." });
     else {
-      delete req.user; // <-- Elimina el req.user
-      req.session.destroy(); // <-- Destruye la sesión
+      delete req.user; 
+      req.session.destroy(); 
       res.status(200).clearCookie('SessionCookie.SID', { path: "/" }).json({ status: "Ok" });
     }
   })
@@ -378,7 +378,7 @@ app.put("/verificarempresa", (req, res) => {
   } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
-app.get("/mensajeverificada", (req, res) => { //mensajito para cuando una empresa no este verificada al hacer login
+app.get("/mensajeverificada", (req, res) => { 
   const empresaId = req.query.id;
 
   EmpresaPromotora.query()
@@ -407,7 +407,7 @@ app.get('/mostrarempresas', (req, res) => {
     const consulta = EmpresaPromotora.query();
 
     if (!!req.body && req.body !== {}) {
-      // Filtrado por verificadas para admin
+      
       if (req.body.verificada !== undefined) {
         consulta.where('verificada', req.body.verificada);
       }
@@ -421,7 +421,7 @@ app.get('/mostrarempresas', (req, res) => {
 
 
 
-app.get('/mostrareventos', (req, res) => { //endpoint pa cliente
+app.get('/mostrareventos', (req, res) => { //endpoint cliente
 
   const consulta = Evento.query();
   const fechaActual = moment().format('YYYY-MM-DD');
@@ -435,7 +435,7 @@ app.get('/mostrareventos', (req, res) => { //endpoint pa cliente
 
 });
 
-app.get('/mostrareventos/empresa', (req, res) => { //endpoint pa empresas
+app.get('/mostrareventos/empresa', (req, res) => { //endpoint empresas
   if (!!req.isAuthenticated()) {
     const consulta = Evento.query();
     const idempresa = req.user.id;
@@ -621,7 +621,7 @@ app.put("/modificarevento", (req, res) => {
   if (!!req.isAuthenticated()) {
   const dbQuery = Evento.query();
   const eventoId = req.body.id;
-  
+
   dbQuery
     .findById(eventoId)
     .then(evento => {
