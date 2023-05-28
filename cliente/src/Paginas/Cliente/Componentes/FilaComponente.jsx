@@ -87,7 +87,7 @@ export const Fila = ({ evento }) => {
         const encryptedCaducidad = encrypt(caducidad, 'clave-secreta');
 
         if (cvv === '' || cvv.length < 3) setCVVError(true);
-        if (numEntradas === '' || !parseInt(numEntradas) || parseInt(numEntradas) <= 1) setNumEntradasError(true);
+        if (numEntradas === '' || !parseInt(numEntradas) || parseInt(numEntradas) < 1) setNumEntradasError(true);
         if (caducidad === '' || caducidad.length < 7) setCaducidadError(true);
         if (tarjetaCredito === '' || tarjetaCredito.length < 16) setTarjetaError(true);
 

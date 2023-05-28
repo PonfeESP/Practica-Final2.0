@@ -619,25 +619,32 @@ app.delete("/eliminarcuentaempresa", (req, res) => {
 
 app.put("/modificarevento", (req, res) => {
   if (!!req.isAuthenticated()) {
-    const dbQuery = Evento.query();
-    const eventoId = req.body.id;
-    const aforonuevo = parseInt(req.body.aforo);
+  const dbQuery = Evento.query();
+  const eventoId = req.body.id;
+  /*const nombremod = req.body.nombre;
+  const artistamod = req.body.artista;
+  const ubicacionmod = req.body.ubicacion;
+  const descripcionmod = req.body.descripcion;
+  const aforomod = req.body.aforo;
+  const fechamod = req.body.fecha;
+  const horamod = req.body.hora;
+  const preciomod = req.body.precio_entrada;*/
 
-    dbQuery
-      .findById(eventoId)
-      .then(evento => {
-        if (!evento) {
-          return res.status(404).json({ error: "El evento no existe" });
-        } else {
-          const fechaEvento = moment(evento.fecha, 'YYYY-MM-DD');
-          const horaEvento = moment(evento.hora, 'HH:mm');
-          const fechaActual = moment();
-          const horaActual = moment();
-          const tiempoEvento = moment(fechaEvento).set({ 'hour': horaEvento.hours(), 'minute': horaEvento.minutes() });
-          const tiempoActual = moment(fechaActual).set({ 'hour': horaActual.hours(), 'minute': horaActual.minutes() });
-          const valido = (tiempoEvento - tiempoActual) / (1000 * 60 * 60);
+  dbQuery
+    .findById(eventoId)
+    .then(evento => {
+      if (!evento) {
+        return res.status(404).json({ error: "El evento no existe" });
+      } else {
+        const fechaEvento = moment(evento.fecha, 'YYYY-MM-DD');
+        const horaEvento = moment(evento.hora, 'HH:mm');
+        const fechaActual = moment();
+        const horaActual = moment();
+        const tiempoEvento = moment(fechaEvento).set({ 'hour': horaEvento.hours(), 'minute': horaEvento.minutes() });
+        const tiempoActual = moment(fechaActual).set({ 'hour': horaActual.hours(), 'minute': horaActual.minutes() });
+        const valido = (tiempoEvento - tiempoActual) / (1000 * 60 * 60);
 
-          const fechaEventoNueva = moment(req.body.fecha, 'YYYY-MM-DD', true);
+        const fechaEventoNueva = moment(req.body.fecha, 'YYYY-MM-DD', true);
           const horaEventoNueva = moment(req.body.hora, 'HH:mm', true);
 
           if (!!req.body.fecha) {
@@ -655,34 +662,34 @@ app.put("/modificarevento", (req, res) => {
           const valido2 = !!req.body.fecha && !!req.body.hora ? (tiempoNuevo - tiempoActual) / (1000 * 60 * 60) : 25
 
           if (valido > 24 && valido2 > 24) {
-            evento
-              .$query()
-              .patch({
-                nombre: req.body.nombre,
-                artista: req.body.artista,
-                ubicacion: req.body.ubicacion,
-                aforo: aforonuevo,
-                descripcion: req.body.descripcion,
-                fecha: req.body.fecha,
-                hora: req.body.hora,
-                precio_entrada: req.body.precio_entrada,
-                cancelada: req.body.cancelada,  //Recordar en el front que para cancelar llamo a este endpoint y paso solo este valor, no hay endpoint de cancelar, no tengo q hacerlo
-              })
-              .then(() => {
-                return res.status(200).json({ status: "OK" });
-              })
-              .catch(error => {
-                return res.status(500).json({ error: "Error al modificar la información del evento" });
-              });
-          } else {
-            return res.status(400).json({ error: "Quedan menos de 24 horas hasta el evento, no se puede modificar" });
-          }
+          evento
+            .$query()
+            .patch({
+              nombre: req.body.nombre,
+              artista: req.body.artista,
+              ubicacion: req.body.ubicacion,
+              aforo: req.body.aforo,
+              descripcion: req.body.descripcion,
+              fecha: req.body.fecha,
+              hora: req.body.hora,
+              precio_entrada: req.body.precio_entrada,
+              cancelada: req.body.cancelada,  //Recordar en el front que para cancelar llamo a este endpoint y paso solo este valor, no hay endpoint de cancelar, no tengo q hacerlo
+            })
+            .then(() => {
+              return res.status(200).json({ status: "OK" });
+            })
+            .catch(error => {
+              return res.status(500).json({ error: "Error al modificar la información del evento" });
+            });
+        } else {
+          return res.status(400).json({ error: "Quedan menos de 24 horas hasta el evento, no se puede modificar" });
         }
-      })
-      .catch(error => {
-        return res.status(500).json({ error: "Error al buscar el evento" });
-      });
-  } else res.status(401).json({ error: "Sesión no iniciada" })
+      }
+    })
+    .catch(error => {
+      return res.status(500).json({ error: "Error al buscar el evento" });
+    });
+    } else res.status(401).json({ error: "Sesión no iniciada" })
 });
 
 
