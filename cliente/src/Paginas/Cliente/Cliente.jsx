@@ -65,8 +65,6 @@ export const Cliente = () => {
         <Paper>
           <Typography variant="h4" color="primary">CLIENTE</Typography>
           <Button onClick={e => performLogout(e)}>CERRAR SESION</Button>
-          <Typography>{!!userData && userData.id}</Typography>
-          <Typography>{!!userData && userData.userType}</Typography>
           {!!logoutError && <Typography>{logoutError}</Typography>}
 
           <ClientePag />
