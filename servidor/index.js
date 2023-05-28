@@ -621,15 +621,7 @@ app.put("/modificarevento", (req, res) => {
   if (!!req.isAuthenticated()) {
   const dbQuery = Evento.query();
   const eventoId = req.body.id;
-  /*const nombremod = req.body.nombre;
-  const artistamod = req.body.artista;
-  const ubicacionmod = req.body.ubicacion;
-  const descripcionmod = req.body.descripcion;
-  const aforomod = req.body.aforo;
-  const fechamod = req.body.fecha;
-  const horamod = req.body.hora;
-  const preciomod = req.body.precio_entrada;*/
-
+  
   dbQuery
     .findById(eventoId)
     .then(evento => {
